@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ customer.company_name }} 詳細{% endblock %}
+
+{% block content %}
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h1 class="card-title mb-0">{{ customer.company_name }}</h1>
+            <div>
+                <a href="{% url 'customer_update' customer.pk %}" class="btn btn-primary">編集する</a>
+                <a href="{% url 'customer_delete' customer.pk %}" class="btn btn-danger">削除する</a>
+            </div>
+        </div>
+        <div class="card-body">
+            <p><strong>担当者名:</strong> {{ customer.contact_person }}</p>
+            <p><strong>電話番号:</strong> {{ customer.phone_number }}</p>
+            <p><strong>メールアドレス:</strong> {{ customer.email_address }}</p>
+            <p><strong>登録日:</strong> {{ customer.created_at }}</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h2>関連案件</h2>
+            <div class="list-group">
+                {% for deal in deals %}
+                    <div class="list-group-item">
+                        <h5 class="mb-1">{{ deal.deal_name }}</h5>
+                        <small>ステータス: {{ deal.get_status_display }}</small>
+                        <p class="mb-1">金額: {{ deal.amount }}円</p>
+                    </div>
+                {% empty %}
+                    <div class="list-group-item">この顧客に関連する案件はありません。</div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="col-md-6">
+            <h2>関連日報</h2>
+            <div class="list-group">
+                {% for report in reports %}
+                    <a href="{% url 'report_detail' report.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">投稿者: {{ report.author.username }}</h5>
+                            <small>{{ report.created_at }}</small>
+                        </div>
+                        <p class="mb-1">{{ report.content|truncatewords:20 }}</p>
+                    </a>
+                {% empty %}
+                    <div class="list-group-item">この顧客に関連する日報はありません。</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    <hr>
+    <a href="{% url 'customer_list' %}" class="btn btn-secondary mt-3">顧客一覧に戻る</a>
+{% endblock %}

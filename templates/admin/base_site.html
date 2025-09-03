@@ -1,0 +1,8 @@
+{% extends "admin/base_site.html" %}
+
+{% block userlinks %}
+    {# ★★★ リンク先を 'report_list' に変更 ★★★ #}
+    <a href="{% url 'report_list' %}" class="btn btn-outline-primary btn-sm me-3">サイトに戻る</a>
+    
+    {{ block.super }}
+{% endblock %}

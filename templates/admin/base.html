@@ -1,0 +1,7 @@
+{% extends "admin/base.html" %}
+
+{# ヘッダー右上のユーザーリンク部分を上書きする #}
+{% block userlinks %}
+    {# メインサイトのダッシュボードへのリンクだけを表示する #}
+    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary btn-sm">メインサイトに戻る</a>
+{% endblock %}

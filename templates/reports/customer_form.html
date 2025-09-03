@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}顧客情報の編集{% endblock %}
+
+{% block content %}
+    <h1>顧客情報の編集</h1>
+    <hr>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">保存する</button>
+        <a href="{% url 'customer_detail' customer.pk %}" class="btn btn-secondary">キャンセル</a>
+    </form>
+{% endblock %}

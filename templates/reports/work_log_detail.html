@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}作業日報 詳細{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">作業日報: {{ work_log.work_date }}</h1>
+        </div>
+        <div class="card-body">
+            <p><strong>担当者:</strong> {{ work_log.author.username }}</p>
+            <p><strong>進捗:</strong> <span class="badge bg-primary">{{ work_log.get_progress_status_display }}</span></p>
+            <p><strong>エリア:</strong> {{ work_log.area }}</p>
+            <p><strong>場所:</strong> {{ work_log.location }}</p>
+            <p><strong>作業種別:</strong> {{ work_log.work_type }}</p>
+            <p><strong>作業時間:</strong> {{ work_log.work_hours }}</p>
+            <hr>
+            <h5>作業内容</h5>
+            <p>{{ work_log.content|linebreaks }}</p>
+            <h5>修繕必要箇所</h5>
+            <p>{{ work_log.repair_needed|linebreaks }}</p>
+            <h5>備考</h5>
+            <p>{{ work_log.remarks|linebreaks }}</p>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'work_log_update' work_log.pk %}" class="btn btn-primary">編集する</a>
+            <a href="{% url 'work_log_delete' work_log.pk %}" class="btn btn-danger">削除する</a>
+            <a href="{% url 'work_log_list' %}" class="btn btn-secondary">一覧に戻る</a>
+        </div>
+    </div>
+{% endblock %}

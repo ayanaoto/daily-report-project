@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ダッシュボード{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">分析</a>
+            <div class="navbar-nav">
+                <a class="nav-link active" href="{% url 'dashboard' %}">グラフ</a>
+                <a class="nav-link" href="{% url 'todo_list' %}">ToDoリスト</a>
+            </div>
+        </div>
+    </nav>
+
+    <h1>ダッシュボード (グラフ)</h1>
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label for="start_date" class="form-label">開始日</label>
+                    <input type="date" class="form-control" id="start_date" name="start_date" value="{{ start_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <label for="end_date" class="form-label">終了日</label>
+                    <input type="date" class="form-control" id="end_date" name="end_date" value="{{ end_date|date:'Y-m-d' }}">
+                </div>
+                <div class="col-md-4">
+                    <button type="submit" class="btn btn-primary">絞り込み</button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-secondary">リセット</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>担当者別の受注案件</h4>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                {% for manager in managers_with_deals %}
+                <div class="col-md-4 mb-3">
+                    <h5>{{ manager.get_full_name|default:manager.username }} ({{ manager.deal_count }}件)</h5>
+                    <ul class="list-group">
+                        {% for deal in manager.deal_set.all %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ deal.deal_name }}
+                                <span class="badge bg-info rounded-pill">{{ deal.get_status_display }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% empty %}
+                <p class="text-muted">担当者に紐づく案件はありません。</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <h4>案件ステータスごとの時間と日数</h4>
+        </div>
+        <div class="card-body" style="font-size: 0.9em;">
+            <table class="table table-bordered align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width: 25%;">案件名</th>
+                        <th>ステータス推移（総日数: {{ item.total_days }}日）</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for item in status_durations %}
+                    <tr>
+                        <td>{{ item.deal.deal_name }}</td>
+                        <td>
+                            <div class="progress" style="height: 24px;">
+                            {% for dur in item.durations %}
+                                <div class="progress-bar
+                                    {% if dur.status == 'discussion' %}bg-secondary{% endif %}
+                                    {% if dur.status == 'proposal' %}bg-info{% endif %}
+                                    {% if dur.status == 'won' %}bg-primary{% endif %}
+                                    {% if dur.status == 'lost' %}bg-danger{% endif %}
+                                    {% if dur.status == 'working' %}bg-warning text-dark{% endif %}
+                                    {% if dur.status == 'completed' %}bg-success{% endif %}"
+                                     role="progressbar"
+                                     data-percentage="{{ dur.percentage }}"
+                                     aria-valuenow="{{ dur.percentage }}" aria-valuemin="0" aria-valuemax="100"
+                                     title="{{ dur.get_status_display }}: {{ dur.days }}日間">
+                                    {% if dur.percentage > 10 %}{{ dur.get_status_display }} ({{ dur.days }}日){% endif %}
+                                </div>
+                            {% endfor %}
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="2" class="text-muted p-4 text-center">案件ステータスの履歴はありません。</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <hr>
+
+    <div class="mb-5">
+        <h4>必要物品リスト (自動抽出: Janome)</h4>
+        {% if needed_items %}
+            {% for deal_name, items in needed_items.items %}
+                <div class="card mb-3">
+                    <div class="card-header">案件: {{ deal_name }}</div>
+                    <ul class="list-group list-group-flush">
+                        {% for item in items %}<li class="list-group-item">{{ item }}</li>{% endfor %}
+                    </ul>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p>現在、報告書から抽出された必要物品はありません。</p>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-5">
+            <h4>作業日報の進捗状況</h4>
+            <div style="max-width: 300px;"><canvas id="pieChart"></canvas></div>
+        </div>
+        <div class="col-md-8 mb-5">
+            <h4>案件ステータスごとの合計金額</h4>
+            <div><canvas id="barChart"></canvas></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12 mb-5">
+            <h4>担当者別の受注案件数</h4>
+            <div><canvas id="userDealsChart"></canvas></div>
+        </div>
+    </div>
+
+    {{ work_log_status_chart_data|json_script:"pie-chart-data" }}
+    {{ deal_status_chart_data|json_script:"bar-chart-data" }}
+    {{ user_deals_chart_data|json_script:"user-deals-chart-data" }}
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            try {
+                const progressBars = document.querySelectorAll('.progress-bar');
+                progressBars.forEach(function(bar) {
+                    const percentage = bar.dataset.percentage;
+                    if (percentage) { bar.style.width = percentage + '%'; }
+                });
+            } catch (e) { console.error("Progress bar script failed:", e); }
+            function drawChart(canvasId, dataId, config) {
+                const canvas = document.getElementById(canvasId);
+                const dataElement = document.getElementById(dataId);
+                if (!canvas || !dataElement) return;
+                try {
+                    const chartData = JSON.parse(dataElement.textContent);
+                    if (chartData && chartData.data && chartData.data.length > 0) {
+                        config.data.labels = chartData.labels;
+                        config.data.datasets[0].data = chartData.data;
+                        new Chart(canvas, config);
+                    }
+                } catch (e) { console.error("Failed to draw chart:", canvasId, e); }
+            }
+            drawChart('pieChart', 'pie-chart-data', {type: 'pie', data: { labels: [], datasets: [{ label: '件数', data: [], backgroundColor: ['rgba(255, 205, 86, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(54, 162, 235, 0.7)'], borderColor: ['#fff'], borderWidth: 2 }] }, options: { responsive: true }});
+            drawChart('barChart', 'bar-chart-data', {type: 'bar', data: { labels: [], datasets: [{ label: '合計金額', data: [], backgroundColor: 'rgba(153, 102, 255, 0.7)', borderColor: 'rgba(153, 102, 255, 1)', borderWidth: 1 }] }, options: { indexAxis: 'y', responsive: true, scales: { x: { beginAtZero: true } } }});
+            drawChart('userDealsChart', 'user-deals-chart-data', {type: 'bar', data: { labels: [], datasets: [{ label: '受注案件数', data: [], backgroundColor: 'rgba(255, 159, 64, 0.7)', borderColor: 'rgba(255, 159, 64, 1)', borderWidth: 1 }] }, options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }});
+        });
+    </script>
+</div>
+{% endblock %}

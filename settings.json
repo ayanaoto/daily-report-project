@@ -1,0 +1,6 @@
+{
+    "python.defaultInterpreterPath": "C:/業務アプリ/daily_report_project/.venv/Scripts/python.exe",
+    "python.analysis.extraPaths": [
+        "C:/業務アプリ/daily_report_project/.venv/Lib/site-packages"
+    ]
+}

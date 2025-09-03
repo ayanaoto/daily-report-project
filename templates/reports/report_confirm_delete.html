@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}日報の削除{% endblock %}
+
+{% block content %}
+    <h1>日報の削除</h1>
+    <hr>
+    <div class="alert alert-danger">
+        <p>本当に「{{ report.customer.company_name }}」に関する日報（{{ report.created_at }}投稿）を削除しますか？</p>
+        <p>この操作は元に戻せません。</p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">はい、削除します</button>
+        <a href="{% url 'report_detail' report.pk %}" class="btn btn-secondary">いいえ、キャンセルします</a>
+    </form>
+{% endblock %}

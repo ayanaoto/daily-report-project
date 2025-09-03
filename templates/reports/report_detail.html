@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}日報詳細{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">日報詳細</h1>
+            <small class="text-muted">投稿者: {{ report.author.username }} | 投稿日時: {{ report.created_at }}</small>
+        </div>
+        <div class="card-body">
+            <h5>顧客: {{ report.customer.company_name }}</h5>
+            {% if report.deal %}
+                <h6 class="card-subtitle mb-3 text-muted">案件: {{ report.deal.deal_name }}</h6>
+            {% endif %}
+            <hr>
+            <p>{{ report.content|linebreaks }}</p>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'report_update' report.pk %}" class="btn btn-primary">編集する</a>
+            <a href="{% url 'report_delete' report.pk %}" class="btn btn-danger">削除する</a>
+            <a href="{% url 'report_list' %}" class="btn btn-secondary">一覧に戻る</a>
+        </div>
+    </div>
+{% endblock %}
