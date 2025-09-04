@@ -6,13 +6,16 @@ import os
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-your-secret-key' # このキーはご自身のものに置き換えてください
-DEBUG = True
-ALLOWED_HOSTS = []
 
-# ★★★ ここからが修正箇所です ★★★
+# ★★★ 1. DEBUGをFalseに設定 ★★★
+DEBUG = False
+
+# ★★★ 2. ALLOWED_HOSTSにRenderのドメインを追加 ★★★
+ALLOWED_HOSTS = ['daily-report-project.onrender.com', '127.0.0.1']
+
+
 INSTALLED_APPS = [
-    'jazzmin',  # jazzminを一番上に配置
-    
+    'jazzmin',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -79,22 +82,19 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
 
-# ★★★ Jazzminのデザイン設定 ★★★
+
+# ★★★ 3. onrender.comからの接続を信頼する設定も追加 ★★★
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
+
+# Jazzminのデザイン設定
 JAZZMIN_SETTINGS = {
     "site_title": "業務アプリ管理",
     "site_header": "業務アプリ",
     "site_brand": "業務アプリ",
     "welcome_sign": "ようこそ、業務アプリ管理画面へ",
     "copyright": "My Company",
-    "theme": "darkly", # ダークテーマを適用
-    
-    # ★ メインサイトへのリンクを有効化
-    "show_ui_builder": True,
-
-    "ui_tweaks": {
-        "sidebar_fixed": True,
-        "navbar_fixed": True,
-    },
+    "theme": "darkly",
+    "ui_tweaks": { "sidebar_fixed": True, "navbar_fixed": True },
     "icons": {
         "auth.user": "fas fa-user",
         "auth.Group": "fas fa-users",
