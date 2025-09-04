@@ -1,12 +1,19 @@
 # .gitignore
+
+# Python
 *.pyc
 __pycache__/
 venv/
 .venv/
+
+# Django
 db.sqlite3
 *.log
+
+# VSCode
 .vscode/
+
+# PyInstaller
 build/
 dist/
 *.spec
-*.zip
