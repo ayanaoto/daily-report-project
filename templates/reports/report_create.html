@@ -30,23 +30,8 @@
 {% block extra_js %}
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // 「顧客」のプルダウンを検索可能にする
-        new TomSelect('#id_customer',{
-            create: true, // 新しい顧客名をその場で追加できるようにする
-            sortField: {
-                field: "text",
-                direction: "asc"
-            }
-        });
-
-        // 「案件」のプルダウンを検索可能にする
-        new TomSelect('#id_deal',{
-            create: true, // 新しい案件名をその場で追加できるようにする
-            sortField: {
-                field: "text",
-                direction: "asc"
-            }
-        });
+        new TomSelect('#id_customer_select',{ create: true });
+        new TomSelect('#id_deal_select',{ create: true });
     });
 </script>
 {% endblock %}
