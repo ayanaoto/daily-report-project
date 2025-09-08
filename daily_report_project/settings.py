@@ -16,6 +16,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'reports',
 ]
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -25,7 +26,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
 ROOT_URLCONF = 'daily_report_project.urls'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -41,38 +44,55 @@ TEMPLATES = [
         },
     },
 ]
+
 WSGI_APPLICATION = 'daily_report_project.wsgi.application'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
+
 LANGUAGE_CODE = 'ja'
 TIME_ZONE = 'Asia/Tokyo'
 USE_I18N = True
 USE_TZ = True
+
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
+
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
+
+# Jazzmin 管理画面カスタマイズ
 JAZZMIN_SETTINGS = {
-    "site_title": "業務アプリ管理", "site_header": "業務アプリ", "site_brand": "業務アプリ",
-    "welcome_sign": "ようこそ、業務アプリ管理画面へ", "copyright": "My Company", "theme": "darkly",
-    "ui_tweaks": { "sidebar_fixed": True, "navbar_fixed": True },
+    "site_title": "業務アプリ管理",
+    "site_header": "業務アプリ",
+    "site_brand": "業務アプリ",
+    "welcome_sign": "ようこそ、業務アプリ管理画面へ",
+    "copyright": "My Company",
+    "theme": "darkly",
+    "ui_tweaks": {"sidebar_fixed": True, "navbar_fixed": True},
     "icons": {
-        "auth.user": "fas fa-user", "auth.Group": "fas fa-users",
-        "reports.Customer": "fas fa-building", "reports.Deal": "fas fa-handshake",
-        "reports.Report": "fas fa-file-alt", "reports.WorkLog": "fas fa-clock",
-        "reports.RequiredItem": "fas fa-check-square", "reports.DealStatusLog": "fas fa-history",
+        "auth.user": "fas fa-user",
+        "auth.Group": "fas fa-users",
+        "reports.Customer": "fas fa-building",
+        "reports.Deal": "fas fa-handshake",
+        "reports.Report": "fas fa-file-alt",
+        "reports.RequiredItem": "fas fa-check-square",
+        "reports.DealStatusLog": "fas fa-history",
         "reports.TroubleshootingReport": "fas fa-wrench",
     },
 }

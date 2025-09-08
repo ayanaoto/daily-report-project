@@ -1,15 +1,13 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-# ★ WorkLog をインポートから完全に削除
 from .models import Report, Customer, Deal, RequiredItem, DealStatusLog, TroubleshootingReport
-# ★ WorkLogForm をインポートから完全に削除
 from .forms import ReportForm, CustomerForm, TroubleshootingReportForm
 from django.http import JsonResponse, HttpResponse
 from janome.tokenizer import Tokenizer
 from datetime import timedelta, datetime
 from collections import Counter, defaultdict
 from django.core.exceptions import PermissionDenied
-from django.db.models import Sum, Count, Q
+from django.db.models import Sum, Count, Q, OuterRef, Subquery
 from django.contrib.auth.models import User
 from django.utils import timezone
 import csv
@@ -37,7 +35,6 @@ def report_create(request):
         if form.is_valid():
             report = form.save(commit=False)
             report.author = request.user
-            # 時間・分を作業時間に変換して保存
             hours = form.cleaned_data.get('hours', 0)
             minutes = form.cleaned_data.get('minutes', 0)
             report.work_hours = timedelta(hours=hours or 0, minutes=minutes or 0)
@@ -57,14 +54,12 @@ def report_update(request, pk):
         form = ReportForm(request.POST, request.FILES, instance=report)
         if form.is_valid():
             report = form.save(commit=False)
-            # 時間・分を作業時間に変換して保存
             hours = form.cleaned_data.get('hours', 0)
             minutes = form.cleaned_data.get('minutes', 0)
             report.work_hours = timedelta(hours=hours or 0, minutes=minutes or 0)
             report.save()
             return redirect('report_detail', pk=pk)
     else:
-        # DBから時間・分を計算してフォームの初期値に設定
         total_seconds = report.work_hours.total_seconds()
         hours = int(total_seconds // 3600)
         minutes = int((total_seconds % 3600) // 60)
@@ -99,7 +94,6 @@ def customer_detail(request, pk):
         raise PermissionDenied
     
     deals = customer.deal_set.all()
-    # 顧客に紐づく日報を、新しいReportモデルのcustomer_nameフィールドで検索
     reports = Report.objects.filter(customer_name=customer.customer_name)
     context = {
         'customer': customer,
@@ -136,7 +130,7 @@ def customer_delete(request, pk):
 
 @login_required
 def deal_list(request):
-    deals = Deal.objects.filter(customer__account_manager=request.user).order_by('-created_at')
+    deals = Deal.objects.filter(customer__account_manager=request.user).order_by('-id')
     return render(request, 'reports/deal_list.html', {'deals': deals})
 
 def load_deals(request):
@@ -148,12 +142,7 @@ def load_deals(request):
     return JsonResponse(list(deals.values('id', 'deal_name')), safe=False)
 
 # ===================================================================
-# ★★★ 作業ログ (WorkLog) 関連のビューはここからすべて削除済み ★★★
-# ===================================================================
-
-
-# ===================================================================
-# 分析機能 (Dashboard, ToDo) のビュー
+# ダッシュボード (Dashboard)
 # ===================================================================
 
 @login_required
@@ -167,11 +156,11 @@ def dashboard(request):
     if start_date_str:
         start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
         base_reports = base_reports.filter(work_date__gte=start_date)
-        base_deals = base_deals.filter(created_at__gte=start_date)
+        base_deals = base_deals.filter(customer__created_at__gte=start_date)
     if end_date_str:
         end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
         base_reports = base_reports.filter(work_date__lte=end_date)
-        base_deals = base_deals.filter(created_at__lte=end_date)
+        base_deals = base_deals.filter(customer__created_at__lte=end_date)
 
     if not request.user.is_superuser:
         reports = base_reports.filter(author=request.user)
@@ -180,28 +169,16 @@ def dashboard(request):
         reports = base_reports
         deals = base_deals
 
-    t = Tokenizer()
-    needed_items = defaultdict(list)
-    for report in reports:
-        deal_name = report.deal_name or "案件未指定"
-        texts_to_check = f"{report.work_details or ''} {report.remarks or ''}"
-        tokens = t.tokenize(texts_to_check)
-        token_list = list(tokens)
-        for i, token in enumerate(token_list):
-            if token.part_of_speech.startswith('名詞'):
-                if i + 1 < len(token_list) and token_list[i+1].surface == '必要':
-                    needed_items[deal_name].append(token.surface)
-                elif i + 2 < len(token_list) and token_list[i+1].surface == 'が' and token_list[i+2].surface == '必要':
-                    needed_items[deal_name].append(token.surface)
+    # --- ステータス別集計 ---
+    latest_status = DealStatusLog.objects.filter(deal=OuterRef('pk')).order_by('-timestamp')
+    deals = deals.annotate(latest_status=Subquery(latest_status.values('status')[:1]))
+    deal_status_data = deals.values('latest_status').annotate(count=Count('id')).order_by('latest_status')
+    deal_status_labels = [item['latest_status'] or "未設定" for item in deal_status_data]
+    deal_status_amounts = [item['count'] for item in deal_status_data]
 
-    deal_status_data = deals.values('status').annotate(total_amount=Sum('amount')).order_by('status')
-    deal_status_labels = [dict(Deal.STATUS_CHOICES).get(item['status']) for item in deal_status_data]
-    deal_status_amounts = [item['total_amount'] for item in deal_status_data]
-    
-    # WorkLogのグラフは削除
-    
+    # --- 担当者別の案件数 ---
     won_deals_by_user = (
-        deals.filter(status='won', customer__account_manager__isnull=False)
+        deals.filter(latest_status='won')
         .values('customer__account_manager__username')
         .annotate(count=Count('id'))
         .order_by('customer__account_manager__username')
@@ -209,14 +186,29 @@ def dashboard(request):
     user_labels = [item['customer__account_manager__username'] for item in won_deals_by_user]
     user_deal_counts = [item['count'] for item in won_deals_by_user]
 
+    # --- カテゴリ別集計（補修・草刈り・塗装などをキーワード判定） ---
+    categories = ["補修", "草刈り", "塗装", "清掃", "点検"]
+    category_counts = Counter()
+    for report in reports:
+        text = f"{report.work_details or ''} {report.remarks or ''}"
+        for cat in categories:
+            if cat in text:
+                category_counts[cat] += 1
+    category_labels = list(category_counts.keys())
+    category_data = list(category_counts.values())
+
     context = {
-        'needed_items': dict(needed_items),
+        'deal_status_chart_data': {'labels': deal_status_labels, 'data': deal_status_amounts},
+        'user_deals_chart_data': {'labels': user_labels, 'data': user_deal_counts},
+        'category_chart_data': {'labels': category_labels, 'data': category_data},
         'start_date': start_date_str,
         'end_date': end_date_str,
-        'deal_status_chart_data': { 'labels': deal_status_labels, 'data': deal_status_amounts, },
-        'user_deals_chart_data': { 'labels': user_labels, 'data': user_deal_counts, },
     }
     return render(request, 'reports/dashboard.html', context)
+
+# ===================================================================
+# ToDo (RequiredItem)
+# ===================================================================
 
 @login_required
 def todo_list(request):
@@ -258,7 +250,7 @@ def todo_export_csv(request):
     return resp
 
 # ===================================================================
-# トラブルシュート報告書 (TroubleshootingReport) のビュー
+# トラブルシュート報告書
 # ===================================================================
 
 @login_required
@@ -303,7 +295,7 @@ def troubleshooting_update(request, pk):
         form = TroubleshootingReportForm(request.POST, instance=report)
         if form.is_valid():
             form.save()
-            return redirect('troubleshooting_detail', pk=report.pk)
+            return redirect('troubleshooting_detail', pk=pk)
     else:
         form = TroubleshootingReportForm(instance=report)
     return render(request, 'reports/troubleshooting_form.html', {'form': form, 'report': report})
