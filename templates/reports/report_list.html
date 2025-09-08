@@ -1,30 +1,29 @@
 {% extends 'base.html' %}
-
 {% block title %}日報一覧{% endblock %}
-
 {% block content %}
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1>日報一覧</h1>
         <a href="{% url 'report_create' %}" class="btn btn-primary">新しい日報を投稿する</a>
     </div>
     
-    {# ★★★ ご指摘の「ようこそ...」の行をここから削除しました ★★★ #}
-    
     {% for report in reports %}
-        <a href="{% url 'report_detail' report.pk %}" class="card mb-3 text-decoration-none text-dark">
-            <div class="card-header">
-                <strong>投稿者:</strong> {{ report.author.username }}
-                <small class="text-muted float-end">{{ report.created_at }}</small>
+        <a href="{{ report.get_absolute_url }}" class="card mb-3 text-decoration-none text-dark">
+            <div class="card-header d-flex justify-content-between">
+                <span>
+                    <strong>{{ report.customer_name }}</strong>
+                    {% if report.deal_name %}({{ report.deal_name }}){% endif %}
+                </span>
+                <small class="text-muted">{{ report.work_date|date:"Y/m/d" }}</small>
             </div>
             <div class="card-body">
-                <h5 class="card-title">顧客: {{ report.customer.customer_name }}</h5>
-                {% if report.deal %}
-                    <h6 class="card-subtitle mb-2 text-muted">案件: {{ report.deal.deal_name }}</h6>
-                {% endif %}
-                <p class="card-text">{{ report.content|linebreaks|truncatewords:50 }}</p>
+                <p class="card-text">{{ report.work_details|linebreaks|truncatewords:50 }}</p>
+            </div>
+            <div class="card-footer text-muted d-flex justify-content-between">
+                <span>報告者: {{ report.author.username }}</span>
+                <span>進捗: {{ report.get_progress_status_display }}</span>
             </div>
         </a>
     {% empty %}
-        <p>まだ日報はありません。</p>
+        <div class="alert alert-info">まだ日報はありません。</div>
     {% endfor %}
 {% endblock %}

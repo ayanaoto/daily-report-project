@@ -7,12 +7,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-your-secret-key' # このキーはご自身のものに置き換えてください
 
-# ★★★ 1. DEBUGをFalseに設定 ★★★
-DEBUG = False
+DEBUG = True
+ALLOWED_HOSTS = ['*']
 
-# ★★★ 2. ALLOWED_HOSTSにRenderのドメインを追加 ★★★
-ALLOWED_HOSTS = ['daily-report-project.onrender.com', '127.0.0.1']
-
+# ★★★ ここからが追記箇所 ★★★
+# onrender.comからの接続を信頼する設定
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
+# ★★★ ここまでが追記箇所 ★★★
 
 INSTALLED_APPS = [
     'jazzmin',
@@ -76,34 +77,24 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-LOGIN_REDIRECT_URL = '/dashboard/'
+LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/accounts/login/'
-
-
-# ★★★ 3. onrender.comからの接続を信頼する設定も追加 ★★★
 CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 
-# Jazzminのデザイン設定
+# ★★★ ここからが修正箇所です ★★★
 JAZZMIN_SETTINGS = {
-    "site_title": "業務アプリ管理",
-    "site_header": "業務アプリ",
-    "site_brand": "業務アプリ",
-    "welcome_sign": "ようこそ、業務アプリ管理画面へ",
+    "site_title": "FieldNote Admin",
+    "site_header": "FieldNote",
+    "site_brand": "FieldNote",
+    "welcome_sign": "FieldNote へようこそ",
     "copyright": "My Company",
     "theme": "darkly",
     "ui_tweaks": { "sidebar_fixed": True, "navbar_fixed": True },
     "icons": {
-        "auth.user": "fas fa-user",
-        "auth.Group": "fas fa-users",
-        "reports.Customer": "fas fa-building",
-        "reports.Deal": "fas fa-handshake",
-        "reports.Report": "fas fa-file-alt",
-        "reports.WorkLog": "fas fa-clock",
-        "reports.RequiredItem": "fas fa-check-square",
-        "reports.DealStatusLog": "fas fa-history",
-        "reports.TroubleshootingReport": "fas fa-wrench",
+        "auth.user": "fas fa-user", "auth.Group": "fas fa-users",
+        "reports.Customer": "fas fa-building", "reports.Deal": "fas fa-handshake",
+        "reports.Report": "fas fa-file-alt", "reports.RequiredItem": "fas fa-check-square",
+        "reports.DealStatusLog": "fas fa-history", "reports.TroubleshootingReport": "fas fa-wrench",
     },
 }
