@@ -1,19 +1,17 @@
-# .gitignore
-
 # Python
-*.pyc
 __pycache__/
-venv/
-.venv/
+*.py[cod]
+*$py.class
 
 # Django
-db.sqlite3
 *.log
+db.sqlite3
+staticfiles/
+media/
 
-# VSCode
+# Environment
+.venv/
+.env
+
+# Editor
 .vscode/
-
-# PyInstaller
-build/
-dist/
-*.spec

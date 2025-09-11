@@ -1,27 +1,49 @@
 from django.urls import path
 from . import views
 
+app_name = 'reports'
+
 urlpatterns = [
-    # ★★★ トップページのURLに 'report_list' の名前を設定 ★★★
-    path('', views.report_list, name='report_list'),
-    
-    path('create/', views.report_create, name='report_create'),
-    path('reports/<int:pk>/', views.report_detail, name='report_detail'),
-    path('reports/<int:pk>/update/', views.report_update, name='report_update'),
-    path('reports/<int:pk>/delete/', views.report_delete, name='report_delete'),
-    path('ajax/load-deals/', views.load_deals, name='ajax_load_deals'),
-    path('customers/', views.customer_list, name='customer_list'),
-    path('customers/<int:pk>/', views.customer_detail, name='customer_detail'),
-    path('customers/<int:pk>/update/', views.customer_update, name='customer_update'),
-    path('customers/<int:pk>/delete/', views.customer_delete, name='customer_delete'),
-    path('deals/', views.deal_list, name='deal_list'),
-    path('dashboard/', views.dashboard, name='dashboard'),
-    path('todos/', views.todo_list, name='todo_list'), 
+    # Report (日報)
+    path('', views.ReportListView.as_view(), name='report_list'),
+    path('reports/<int:pk>/', views.ReportDetailView.as_view(), name='report_detail'),
+    path('reports/create/', views.ReportCreateView.as_view(), name='report_create'),
+    path('reports/<int:pk>/update/', views.ReportUpdateView.as_view(), name='report_update'),
+    path('reports/<int:pk>/delete/', views.ReportDeleteView.as_view(), name='report_confirm_delete'),
+
+    # Customer (顧客)
+    path('customers/', views.CustomerListView.as_view(), name='customer_list'),
+    path('customers/create/', views.CustomerCreateView.as_view(), name='customer_create'),
+    path('customers/<int:pk>/', views.CustomerDetailView.as_view(), name='customer_detail'),
+    path('customers/<int:pk>/update/', views.CustomerUpdateView.as_view(), name='customer_update'),
+    path('customers/<int:pk>/delete/', views.CustomerDeleteView.as_view(), name='customer_delete'),
+
+    # Deal (案件)
+    path('deals/', views.DealListView.as_view(), name='deal_list'),
+    path('deals/create/', views.DealCreateView.as_view(), name='deal_create'),
+    path('deals/<int:pk>/', views.DealDetailView.as_view(), name='deal_detail'),
+    path('deals/<int:pk>/update/', views.DealUpdateView.as_view(), name='deal_update'),
+    path('deals/<int:pk>/delete/', views.DealDeleteView.as_view(), name='deal_delete'),
+
+    # Troubleshooting (トラブルシュート)
+    path('troubleshooting/', views.TroubleshootingListView.as_view(), name='troubleshooting_list'),
+    path('troubleshooting/create/', views.TroubleshootingCreateView.as_view(), name='troubleshooting_create'),
+    path('troubleshooting/<int:pk>/', views.TroubleshootingDetailView.as_view(), name='troubleshooting_detail'),
+    path('troubleshooting/<int:pk>/update/', views.TroubleshootingUpdateView.as_view(), name='troubleshooting_update'),
+    path('troubleshooting/<int:pk>/delete/', views.TroubleshootingDeleteView.as_view(), name='troubleshooting_delete'),
+
+    # ToDo (RequiredItem)
+    path('todos/', views.TodoListView.as_view(), name='todo_list'),
+    path('todos/create/', views.TodoCreateView.as_view(), name='todo_create'),
     path('todos/<int:pk>/toggle/', views.todo_toggle, name='todo_toggle'),
-    path('todos/export.csv/', views.todo_export_csv, name='todo_export_csv'),
-    path('troubleshooting/', views.troubleshooting_list, name='troubleshooting_list'),
-    path('troubleshooting/create/', views.troubleshooting_create, name='troubleshooting_create'),
-    path('troubleshooting/<int:pk>/', views.troubleshooting_detail, name='troubleshooting_detail'),
-    path('troubleshooting/<int:pk>/update/', views.troubleshooting_update, name='troubleshooting_update'),
-    path('troubleshooting/<int:pk>/delete/', views.troubleshooting_delete, name='troubleshooting_delete'),
+    path('todos/<int:pk>/update/', views.TodoUpdateView.as_view(), name='todo_update'),
+    path('todos/<int:pk>/delete/', views.TodoDeleteView.as_view(), name='todo_delete'),
+    path('todos/export/', views.todo_export_csv, name='todo_export_csv'),
+
+    # Dashboard (分析)
+    path('dashboard/', views.dashboard, name='dashboard'),
+    
+    # Account & Profile
+    path('signup/', views.SignUpView.as_view(), name='signup'),
+    path('profile/', views.profile_update, name='profile_update'),
 ]

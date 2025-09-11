@@ -1,6 +1,17 @@
 {% extends "admin/base_site.html" %}
+{% load static %}
 
-{% block userlinks %}
-    <a href="{% url 'report_list' %}" class="btn btn-outline-primary btn-sm me-3">サイトに戻る</a>
-    {{ block.super }}
+{% block branding %}
+  <h1 id="site-name">
+    <a href="{% url 'admin:index' %}">{{ site_header|default:"FieldNote" }}</a>
+  </h1>
+  <a href="/" class="button" style="
+      margin-left:1rem;
+      padding:.4rem .8rem;
+      border:1px solid #7dd3fc;
+      border-radius:.5rem;
+      text-decoration:none;
+      ">
+    ← メインサイトへ
+  </a>
 {% endblock %}

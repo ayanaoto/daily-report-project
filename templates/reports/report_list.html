@@ -1,29 +1,93 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+
 {% block title %}日報一覧{% endblock %}
+
 {% block content %}
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h1>日報一覧</h1>
-        <a href="{% url 'report_create' %}" class="btn btn-primary">新しい日報を投稿する</a>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0 text-white">日報一覧</h1>
+  <a href="{% url 'reports:report_create' %}" class="btn btn-primary">
+    <i class="bi bi-plus-lg"></i> 新規作成
+  </a>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>場所</th>
+            <th>進捗</th>
+            <th>作業時間</th>
+            <th>作成者</th>
+            <th>作成日</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for report in reports %}
+          <tr>
+            <td>{{ report.location }}</td>
+            <td>{{ report.get_progress_display }}</td>
+            <td>{{ report.work_hours }}</td>
+            <td>{{ report.author.username }}</td>
+            <td>{{ report.created_at|date:"Y-m-d H:i" }}</td>
+            <td>
+              <a href="{{ report.get_absolute_url }}" class="btn btn-sm btn-info">詳細</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center">まだ日報はありません。</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-    
-    {% for report in reports %}
-        <a href="{{ report.get_absolute_url }}" class="card mb-3 text-decoration-none text-dark">
-            <div class="card-header d-flex justify-content-between">
-                <span>
-                    <strong>{{ report.customer_name }}</strong>
-                    {% if report.deal_name %}({{ report.deal_name }}){% endif %}
-                </span>
-                <small class="text-muted">{{ report.work_date|date:"Y/m/d" }}</small>
-            </div>
-            <div class="card-body">
-                <p class="card-text">{{ report.work_details|linebreaks|truncatewords:50 }}</p>
-            </div>
-            <div class="card-footer text-muted d-flex justify-content-between">
-                <span>報告者: {{ report.author.username }}</span>
-                <span>進捗: {{ report.get_progress_status_display }}</span>
-            </div>
+  </div>
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Page navigation" class="mt-4">
+  <ul class="pagination justify-content-center">
+
+    {% if page_obj.has_previous %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
+          <span aria-hidden="true">&laquo;</span>
         </a>
-    {% empty %}
-        <div class="alert alert-info">まだ日報はありません。</div>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link" aria-hidden="true">&laquo;</span>
+      </li>
+    {% endif %}
+
+    {% for num in page_obj.paginator.page_range %}
+      {% if page_obj.number == num %}
+        <li class="page-item active" aria-current="page">
+          <span class="page-link">{{ num }}</span>
+        </li>
+      {% else %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+        </li>
+      {% endif %}
     {% endfor %}
+
+    {% if page_obj.has_next %}
+      <li class="page-item">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
+          <span aria-hidden="true">&raquo;</span>
+        </a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <span class="page-link" aria-hidden="true">&raquo;</span>
+      </li>
+    {% endif %}
+    
+  </ul>
+</nav>
+{% endif %}
 {% endblock %}

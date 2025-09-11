@@ -1,47 +1,46 @@
 from django import forms
-from .models import Report, Customer, TroubleshootingReport
+from django.contrib.auth.forms import UserCreationForm
+from .models import Report, Customer, Deal, Troubleshooting, RequiredItem, Profile
+
+class SignUpForm(UserCreationForm):
+    class Meta(UserCreationForm.Meta):
+        fields = ('username', 'email')
+
+class ProfileForm(forms.ModelForm):
+    class Meta:
+        model = Profile
+        fields = ['background_image']
 
 class ReportForm(forms.ModelForm):
+    hours = forms.IntegerField(label="作業時間（時）", min_value=0, required=False, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+    minutes = forms.IntegerField(label="作業時間（分）", min_value=0, max_value=59, required=False, widget=forms.NumberInput(attrs={'class': 'form-control'}))
+
     class Meta:
         model = Report
-        fields = [
-            'customer_name',
-            'deal_name',
-            'work_date',
-            'progress_status',
-            'work_hours',
-            'work_details',
-            'remarks',
-            'attachment',
-        ]
+        fields = ['location', 'progress', 'content', 'remarks']
         widgets = {
-            'customer_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'deal_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'work_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'progress_status': forms.Select(attrs={'class': 'form-control'}),
-            'work_hours': forms.TextInput(attrs={'class': 'form-control'}),
-            'work_details': forms.Textarea(attrs={'class': 'form-control', 'rows': 10}),
+            'location': forms.TextInput(attrs={'class': 'form-control'}),
+            'progress': forms.Select(attrs={'class': 'form-select'}),
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
             'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
-            'attachment': forms.ClearableFileInput(attrs={'class': 'form-control'}),
         }
 
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
-        fields = ['customer_name', 'account_manager']
-        widgets = {
-            'customer_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'account_manager': forms.Select(attrs={'class': 'form-control'}),
-        }
+        fields = ['company_name', 'contact_person', 'phone_number', 'email_address', 'account_manager']
 
-class TroubleshootingReportForm(forms.ModelForm):
+class DealForm(forms.ModelForm):
     class Meta:
-        model = TroubleshootingReport
-        fields = ['title', 'location', 'symptom', 'solution', 'keywords']
-        widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
-            'location': forms.TextInput(attrs={'class': 'form-control'}),
-            'symptom': forms.Textarea(attrs={'class': 'form-control', 'rows': 4}),
-            'solution': forms.Textarea(attrs={'class': 'form-control', 'rows': 6}),
-            'keywords': forms.TextInput(attrs={'class': 'form-control'}),
-        }
+        model = Deal
+        fields = ['deal_name', 'customer', 'status', 'amount', 'close_date']
+
+class TroubleshootingForm(forms.ModelForm):
+    class Meta:
+        model = Troubleshooting
+        fields = ['title', 'location', 'symptom', 'solution', 'keywords', 'occurred_at']
+
+class RequiredItemForm(forms.ModelForm):
+    class Meta:
+        model = RequiredItem
+        fields = ['title', 'deal', 'is_done']

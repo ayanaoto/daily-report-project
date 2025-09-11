@@ -1,26 +1,85 @@
 {% extends 'base.html' %}
 {% load static %}
+
 {% block title %}ToDoリスト{% endblock %}
+
 {% block content %}
 <div class="container mt-4">
+
     <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded">
-        <div class="container-fluid"><a class="navbar-brand" href="#">分析</a><div class="navbar-nav"><a class="nav-link" href="{% url 'dashboard' %}">グラフ</a><a class="nav-link active" href="{% url 'todo_list' %}">ToDoリスト</a></div></div>
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">分析</a>
+            <div class="navbar-nav">
+                {# ↓ 名前空間 'reports:' を追加 #}
+                <a class="nav-link" href="{% url 'reports:dashboard' %}">グラフ</a>
+                {# ↓ 名前空間 'reports:' を追加 #}
+                <a class="nav-link active" href="{% url 'reports:todo_list' %}">ToDoリスト</a>
+            </div>
+        </div>
     </nav>
+
     <h1>必要物品リスト (ToDo)</h1>
+
     <form method="get" class="row gy-2 gx-2 align-items-end mb-3 bg-white p-3 border rounded">
-        <div class="col-auto"><label class="form-label d-block">表示</label><div class="btn-group" role="group"><a class="btn btn-sm btn-outline-secondary {% if show != 'all' %}active{% endif %}" href="?show=open{% if case %}&case={{ case|urlencode }}{% endif %}">未完了のみ</a><a class="btn btn-sm btn-outline-secondary {% if show == 'all' %}active{% endif %}" href="?show=all{% if case %}&case={{ case|urlencode }}{% endif %}">すべて</a></div></div>
-        <div class="col-auto"><label for="case" class="form-label">案件名</label><input id="case" name="case" value="{{ case }}" class="form-control form-control-sm" placeholder="例: 新倉庫の設計"></div>
-        <div class="col-auto"><label class="form-label d-block">&nbsp;</label><button class="btn btn-sm btn-primary">絞り込み</button><a class="btn btn-sm btn-secondary" href="{% url 'todo_list' %}">リセット</a></div>
-        <div class="col-auto ms-auto"><label class="form-label d-block">&nbsp;</label><a class="btn btn-sm btn-outline-primary" href="{% url 'todo_export_csv' %}?show={{ show }}{% if case %}&case={{ case|urlencode }}{% endif %}">CSV出力</a></div>
+        <div class="col-auto">
+            <label class="form-label d-block">表示</label>
+            <div class="btn-group" role="group">
+                <a class="btn btn-sm btn-outline-secondary {% if show != 'all' %}active{% endif %}" href="?show=open{% if case %}&case={{ case|urlencode }}{% endif %}">未完了のみ</a>
+                <a class="btn btn-sm btn-outline-secondary {% if show == 'all' %}active{% endif %}" href="?show=all{% if case %}&case={{ case|urlencode }}{% endif %}">すべて</a>
+            </div>
+        </div>
+
+        <div class="col-auto">
+            <label for="case" class="form-label">案件名</label>
+            <input id="case" name="case" value="{{ case }}" class="form-control form-control-sm" placeholder="例: 新倉庫の設計">
+        </div>
+
+        <div class="col-auto">
+            <label class="form-label d-block">&nbsp;</label>
+            <button class="btn btn-sm btn-primary">絞り込み</button>
+            {# ↓ 名前空間 'reports:' を追加 #}
+            <a class="btn btn-sm btn-secondary" href="{% url 'reports:todo_list' %}">リセット</a>
+        </div>
+
+        <div class="col-auto ms-auto">
+            <label class="form-label d-block">&nbsp;</label>
+            {# ↓ 名前空間 'reports:' を追加 #}
+            <a class="btn btn-sm btn-outline-primary" href="{% url 'reports:todo_export_csv' %}?show={{ show }}{% if case %}&case={{ case|urlencode }}{% endif %}">CSV出力</a>
+        </div>
     </form>
+
     <div class="card">
-        <div class="card-body p-0"><table class="table table-sm mb-0 align-middle"><thead class="table-light"><tr><th style="width:110px;">操作</th><th>項目</th><th style="width:25%;">案件</th><th style="width:20%;">状態</th></tr></thead><tbody>{% for t in todos %}
-<tr class="{% if t.is_done %}table-success{% endif %}">
-<td><form method="post" action="{% url 'todo_toggle' t.pk %}">{% csrf_token %}<button class="btn btn-sm {% if t.is_done %}btn-success{% else %}btn-outline-secondary{% endif %}">{% if t.is_done %}完了{% else %}未完了{% endif %}</button></form></td>
-<td class="{% if t.is_done %}text-decoration-line-through text-success{% endif %}">{{ t.title }}</td>
-<td>{{ t.deal.deal_name|default:"案件未指定" }}</td>
-<td>{% if t.is_done %}済（{{ t.completed_at|date:"Y/m-d H:i" }}）{% else %}未{% endif %}</td>
-</tr>{% empty %}<tr><td colspan="4" class="text-muted p-3 text-center">ToDo項目はありません</td></tr>{% endfor %}</tbody></table></div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:110px;">操作</th>
+                        <th>項目</th>
+                        <th style="width:25%;">案件</th>
+                        <th style="width:20%;">状態</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for t in todos %}
+                    <tr>
+                        <td>
+                            {# ↓ URL名を修正し、名前空間 'reports:' を追加 #}
+                            <form action="{% url 'reports:todo_toggle' t.pk %}" method="post" class="d-inline">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm btn-success">完了/未完了</button>
+                            </form>
+                        </td>
+                        <td>{{ t.title }}</td>
+                        <td>{{ t.deal.deal_name|default:"-" }}</td>
+                        <td>{% if t.is_done %}完了{% else %}未完了{% endif %}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" class="text-center py-4">ToDoはありません。</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
+
 </div>
 {% endblock %}

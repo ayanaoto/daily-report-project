@@ -1,6 +1,11 @@
 {
-    "python.defaultInterpreterPath": "C:/業務アプリ/daily_report_project/.venv/Scripts/python.exe",
-    "python.analysis.extraPaths": [
-        "C:/業務アプリ/daily_report_project/.venv/Lib/site-packages"
-    ]
+  "python.defaultInterpreterPath": "C:\\業務アプリ\\daily_report_project\\.venv\\Scripts\\python.exe",
+  "python.analysis.diagnosticMode": "workspace",
+  "python.analysis.typeCheckingMode": "standard",
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.extraPaths": [
+    "C:\\業務アプリ\\daily_report_project"
+  ],
+  "python.terminal.activateEnvironment": true,
+  "terminal.integrated.defaultProfile.windows": "PowerShell"
 }

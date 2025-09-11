@@ -1,39 +1,11 @@
 {% extends 'base.html' %}
-{% block title %}日報詳細{% endblock %}
+{% block title %}{{ report.title }}{% endblock %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>日報詳細</h1>
-    <div>
-        {% if report.author == request.user or request.user.is_superuser %}
-        <a href="{% url 'report_update' report.pk %}" class="btn btn-secondary">編集</a>
-        <a href="{% url 'report_delete' report.pk %}" class="btn btn-danger">削除</a>
-        {% endif %}
-    </div>
-</div>
-
-<div class="card">
-    <div class="card-header">
-        <h4 class="mb-0">{{ report.work_date|date:"Y年m月d日" }} の日報</h4>
-    </div>
-    <div class="card-body">
-        <p><strong>場所・顧客名:</strong> {{ report.customer_name }}</p>
-        {% if report.deal_name %}<p><strong>案件名:</strong> {{ report.deal_name }}</p>{% endif %}
-        <p><strong>進捗:</strong> {{ report.get_progress_status_display }}</p>
-        <p><strong>作業時間:</strong> {{ report.work_hours }}</p>
-        <p><strong>報告者:</strong> {{ report.author.username }}</p>
-        <hr>
-
-        <h5 class="card-title">【最重要】今日の作業内容</h5>
-        <div class="bg-light p-3 rounded mb-3">
-            <p class="card-text mb-0">{{ report.work_details|linebreaksbr }}</p>
-        </div>
-
-        <h5 class="card-title">所感・連絡事項など</h5>
-        <div class="bg-light p-3 rounded">
-            <p class="card-text mb-0">{{ report.remarks|linebreaksbr }}</p>
-        </div>
-    </div>
-</div>
-
-<a href="{% url 'report_list' %}" class="btn btn-outline-secondary mt-3">一覧に戻る</a>
+    <h1>{{ report.title }}</h1>
+    <p><small class="text-muted">作成者: {{ report.author.username }} | {{ report.created_at }}</small></p>
+    <hr>
+    <div>{{ report.content|linebreaks }}</div>
+    <hr>
+    <a href="{% url 'reports:report_list' %}" class="btn btn-secondary">一覧に戻る</a>
+    <a href="{% url 'reports:report_update' report.pk %}" class="btn btn-primary">編集</a>
 {% endblock %}
