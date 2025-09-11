@@ -4,9 +4,19 @@ from django.contrib.messages import constants as messages
 
 # ========== 基本設定 ==========
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# 本番環境ではRenderの環境変数から読み込む。開発環境ではデフォルト値を使用。
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-secret-change-me-for-development")
+
+# 本番環境では '0' に設定するため DEBUG は False になる
 DEBUG = os.environ.get("DJANGO_DEBUG", "1") == "1"
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+
+# Renderのドメインを許可するホストに追加
+ALLOWED_HOSTS = [
+    "daily-report-project.onrender.com",
+    "127.0.0.1",
+    "localhost",
+]
 
 
 # ========== ブランド名 ==========
@@ -87,12 +97,15 @@ USE_TZ = True
 # ========== 静的ファイル・メディアファイル ==========
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-# Whitenoise用の設定
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
+# ========== ログイン/ログアウトのリダイレクト先 ==========
+LOGIN_REDIRECT_URL = "/"
+LOGOUT_REDIRECT_URL = "/"
+LOGIN_URL = "/accounts/login/"
 
 # ========== Django メッセージ ==========
 MESSAGE_TAGS = {
@@ -123,7 +136,5 @@ JAZZMIN_UI_TWEAKS = {
 }
 
 # ========== 本番環境向けセキュリティ設定 ==========
-# RenderなどのPaaSでHTTPS通信を正しく認識させるための設定
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-# CSRF対策で、許可するオリジンを環境変数から読み込む
 CSRF_TRUSTED_ORIGINS = os.environ.get("CSRF_TRUSTED_ORIGINS", "").split(",") if os.environ.get("CSRF_TRUSTED_ORIGINS") else []
