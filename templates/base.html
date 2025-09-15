@@ -11,31 +11,57 @@
   {% load static %}
   <style>
     :root {
-      --fn-bg-light: #ffffff;
-      --fn-text-dark: #212529;
-      --fn-border-color: #dee2e6;
-      --fn-link-color: #0d6efd;
+      /* 色の定義 */
+      --fn-bg-dark: #212529;      /* 背景: 濃いグレー */
+      --fn-bg-card: #343a40;      /* カード背景: 少し明るいグレー */
+      --fn-text-light: #FFFFFF;   /* 基本の文字: 白 */
+      --fn-text-title: #38BDF8;  /* タイトル: 水色 */
+      --fn-border-color: #FFFFFF; /* 境界線: 白 */
     }
 
     body {
-      background-color: var(--fn-bg-light);
-      color: var(--fn-text-dark);
-      /* ユーザーが背景画像をアップロードした場合に備えて、デフォルトの背景画像は削除 */
+      background-color: var(--fn-bg-dark);
+      color: var(--fn-text-light);
+      {% if user.is_authenticated and user.profile.background_image %}
+        background-image: url("{{ user.profile.background_image.url }}");
+        background-size: cover;
+        background-attachment: fixed;
+        background-position: center;
+      {% endif %}
     }
+    
     .navbar { 
-      background-color: var(--fn-bg-light);
-      border-bottom: 1px solid var(--fn-border-color);
+      background-color: rgba(20, 24, 29, 0.85); 
+      backdrop-filter: blur(5px);
+      border-bottom: 1px solid var(--fn-border-color) !important;
     }
     .card { 
+      background-color: var(--fn-bg-card);
       border: 1px solid var(--fn-border-color);
+    }
+    h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+      color: var(--fn-text-title);
+    }
+    a {
+      color: var(--fn-text-title);
+    }
+    .nav-link, .dropdown-item {
+        color: var(--fn-text-light);
+    }
+    .dropdown-menu {
+      background-color: var(--fn-bg-card);
+      border-color: var(--fn-border-color);
+    }
+    .dropdown-item:hover {
+      background-color: rgba(56, 189, 248, 0.1);
     }
   </style>
 </head>
-<body {% if user.is_authenticated and user.profile.background_image %}style="background-image: url('{{ user.profile.background_image.url }}'); background-size: cover; background-attachment: fixed;"{% endif %}>
+<body {% if user.is_authenticated and user.profile.background_image %}style="background-image: url('{{ user.profile.background_image.url }}');"{% endif %}>
   
-  <nav class="navbar navbar-expand-lg navbar-light sticky-top">
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
     <div class="container-fluid">
-      <a class="navbar-brand" href="/">FieldNote</a>
+      <a class="navbar-brand" href="/" style="color: var(--fn-text-title);">FieldNote</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
         <span class="navbar-toggler-icon"></span>
       </button>
@@ -79,7 +105,7 @@
     </div>
   </nav>
 
-  <main class="container mt-4">
+  <main class="container my-4">
     {% block content %}{% endblock %}
   </main>
 

@@ -1,18 +1,155 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 
-{% block title %}作業日報の削除{% endblock %}
+{% block title %}ダッシュボード{% endblock %}
+
+{% block page_title %}ダッシュボード{% endblock %}
 
 {% block content %}
-    <h1>作業日報の削除</h1>
-    <hr>
-    <div class="alert alert-danger">
-        <p>本当に「{{ work_log.work_date }} の {{ work_log.work_type }}」を削除しますか？</p>
-        <p>この操作は元に戻せません。</p>
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        ユーザー別のレポート件数
+      </div>
+      <div class="card-body">
+        <canvas id="userReportChart"></canvas>
+      </div>
     </div>
+  </div>
 
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">はい、削除します</button>
-        <a href="{% url 'work_log_detail' work_log.pk %}" class="btn btn-secondary">いいえ、キャンセルします</a>
-    </form>
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        あなたの進捗状況
+      </div>
+      <div class="card-body">
+        <canvas id="progressChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        場所ごとの合計作業時間
+      </div>
+      <div class="card-body">
+        <canvas id="hoursChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Chart.jsライブラリの読み込み #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{# DjangoのデータをJavaScriptに渡す #}
+{{ user_chart_labels|json_script:"user-chart-labels" }}
+{{ user_chart_data|json_script:"user-chart-data" }}
+{{ progress_chart_labels|json_script:"progress-chart-labels" }}
+{{ progress_chart_data|json_script:"progress-chart-data" }}
+{{ location_chart_labels|json_script:"location-chart-labels" }}
+{{ location_chart_data|json_script:"location-chart-data" }}
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // --- 共通のグラフ設定 ---
+  const textColor = '#E5E7EB'; // 文字色
+  const gridColor = 'rgba(229, 231, 235, 0.2)'; // グラフの補助線の色
+
+  // --- グラフ1の描画 ---
+  const userLabels = JSON.parse(document.getElementById('user-chart-labels').textContent);
+  const userData = JSON.parse(document.getElementById('user-chart-data').textContent);
+  const userCtx = document.getElementById('userReportChart').getContext('2d');
+  new Chart(userCtx, {
+    type: 'bar',
+    data: {
+      labels: userLabels,
+      datasets: [{
+        label: 'レポート件数',
+        data: userData,
+        backgroundColor: 'rgba(56, 189, 248, 0.5)',
+        borderColor: 'rgba(56, 189, 248, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      plugins: { legend: { labels: { color: textColor } } },
+      scales: {
+        y: { 
+          beginAtZero: true, 
+          ticks: { color: textColor, stepSize: 1 },
+          grid: { color: gridColor }
+        },
+        x: {
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        }
+      }
+    }
+  });
+
+  // --- グラフ2の描画 ---
+  const progressLabels = JSON.parse(document.getElementById('progress-chart-labels').textContent);
+  const progressData = JSON.parse(document.getElementById('progress-chart-data').textContent);
+  const progressCtx = document.getElementById('progressChart').getContext('2d');
+  new Chart(progressCtx, {
+    type: 'doughnut',
+    data: {
+      labels: progressLabels,
+      datasets: [{
+        label: '件数',
+        data: progressData,
+        backgroundColor: [
+          'rgba(239, 68, 68, 0.6)',
+          'rgba(56, 189, 248, 0.6)',
+          'rgba(16, 185, 129, 0.6)'
+        ],
+        borderColor: [
+          '#EF4444',
+          '#38BDF8',
+          '#10B981'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      plugins: { legend: { labels: { color: textColor } } }
+    }
+  });
+
+  // --- グラフ3の描画 ---
+  const locationLabels = JSON.parse(document.getElementById('location-chart-labels').textContent);
+  const locationData = JSON.parse(document.getElementById('location-chart-data').textContent);
+  const hoursCtx = document.getElementById('hoursChart').getContext('2d');
+  new Chart(hoursCtx, {
+    type: 'bar',
+    data: {
+      labels: locationLabels,
+      datasets: [{
+        label: '合計作業時間 (時間)',
+        data: locationData,
+        backgroundColor: 'rgba(16, 185, 129, 0.5)',
+        borderColor: 'rgba(16, 185, 129, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: 'y', // 横棒グラフにする
+      plugins: { legend: { labels: { color: textColor } } },
+      scales: {
+        x: { 
+          beginAtZero: true,
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        },
+        y: {
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        }
+      }
+    }
+  });
+});
+</script>
 {% endblock %}

@@ -53,6 +53,10 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
+  // --- グラフの共通設定（ダークテーマ用） ---
+  const textColor = '#E5E7EB'; // 文字色
+  const gridColor = 'rgba(229, 231, 235, 0.2)'; // グラフの補助線の色
+
   // --- グラフ1の描画 ---
   const userLabels = JSON.parse(document.getElementById('user-chart-labels').textContent);
   const userData = JSON.parse(document.getElementById('user-chart-data').textContent);
@@ -64,14 +68,23 @@ document.addEventListener('DOMContentLoaded', () => {
       datasets: [{
         label: 'レポート件数',
         data: userData,
-        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-        borderColor: 'rgba(54, 162, 235, 1)',
+        backgroundColor: 'rgba(56, 189, 248, 0.5)',
+        borderColor: 'rgba(56, 189, 248, 1)',
         borderWidth: 1
       }]
     },
     options: {
+      plugins: { legend: { labels: { color: textColor } } },
       scales: {
-        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        y: { 
+          beginAtZero: true, 
+          ticks: { color: textColor, stepSize: 1 },
+          grid: { color: gridColor }
+        },
+        x: {
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        }
       }
     }
   });
@@ -88,19 +101,16 @@ document.addEventListener('DOMContentLoaded', () => {
         label: '件数',
         data: progressData,
         backgroundColor: [
-          'rgba(255, 99, 132, 0.5)',
-          'rgba(54, 162, 235, 0.5)',
-          'rgba(75, 192, 192, 0.5)',
-          'rgba(255, 206, 86, 0.5)',
+          'rgba(239, 68, 68, 0.6)',
+          'rgba(56, 189, 248, 0.6)',
+          'rgba(16, 185, 129, 0.6)'
         ],
-        borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(255, 206, 86, 1)',
-        ],
+        borderColor: [ '#EF4444', '#38BDF8', '#10B981' ],
         borderWidth: 1
       }]
+    },
+    options: {
+      plugins: { legend: { labels: { color: textColor } } }
     }
   });
 
@@ -115,15 +125,24 @@ document.addEventListener('DOMContentLoaded', () => {
       datasets: [{
         label: '合計作業時間 (時間)',
         data: locationData,
-        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-        borderColor: 'rgba(75, 192, 192, 1)',
+        backgroundColor: 'rgba(16, 185, 129, 0.5)',
+        borderColor: 'rgba(16, 185, 129, 1)',
         borderWidth: 1
       }]
     },
     options: {
-      indexAxis: 'y', // 横棒グラフにする
+      indexAxis: 'y',
+      plugins: { legend: { labels: { color: textColor } } },
       scales: {
-        x: { beginAtZero: true }
+        x: { 
+          beginAtZero: true,
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        },
+        y: {
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        }
       }
     }
   });
