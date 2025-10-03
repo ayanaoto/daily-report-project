@@ -14,4 +14,8 @@ media/
 .env
 
 # Editor
-.vscode/
+.vscode/.env
+.env.*
+Key*.txt
+*.key
+*.pem
