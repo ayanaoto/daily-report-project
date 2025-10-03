@@ -1,0 +1,20 @@
+{
+  "venvPath": ".",
+  "venv": ".venv",
+  "pythonVersion": "3.12",
+
+  // これを "none" にすると「ソースが見つからない」系の警告を消せます
+  "reportMissingModuleSource": "none",
+
+  // 念のため site-packages を直指定（Pylance が迷子のときに効く）
+  "extraPaths": [
+    ".venv/Lib/site-packages"
+  ],
+
+  "typeCheckingMode": "standard",
+  "exclude": [
+    "**/__pycache__",
+    ".venv/**",
+    "staticfiles/**"
+  ]
+}

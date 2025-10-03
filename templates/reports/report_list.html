@@ -1,93 +1,157 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}日報一覧{% endblock %}
+{% block title %}レポート一覧{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h3 mb-0 text-white">日報一覧</h1>
-  <a href="{% url 'reports:report_create' %}" class="btn btn-primary">
-    <i class="bi bi-plus-lg"></i> 新規作成
-  </a>
-</div>
+<div class="container-fluid py-4">
+  <h1 class="mb-4 fw-bold">レポート一覧</h1>
 
-<div class="card">
-  <div class="card-body">
+  <!-- 検索フォーム -->
+  <form method="get" class="row g-3 align-items-end mb-3">
+    <!-- 開始日 -->
+    <div class="col-12 col-sm-6 col-md-3">
+      <label class="form-label">開始日</label>
+      <input type="date"
+             name="start"
+             value="{{ request.GET.start }}"
+             class="form-control fn-input"
+             placeholder="年 / 月 / 日">
+    </div>
+
+    <!-- 終了日 -->
+    <div class="col-12 col-sm-6 col-md-3">
+      <label class="form-label">終了日</label>
+      <input type="date"
+             name="end"
+             value="{{ request.GET.end }}"
+             class="form-control fn-input"
+             placeholder="年 / 月 / 日">
+    </div>
+
+    <!-- キーワード -->
+    <div class="col-12 col-md-4">
+      <label class="form-label">キーワード</label>
+      <input type="text"
+             name="q"
+             value="{{ request.GET.q }}"
+             class="form-control fn-input"
+             placeholder="顧客・件名・本文など">
+    </div>
+
+    <!-- 並び -->
+    <div class="col-6 col-md-2">
+      <label class="form-label">並び</label>
+      <select name="sort" class="form-select fn-select">
+        <option value="-created" {% if request.GET.sort == "-created" or not request.GET.sort %}selected{% endif %}>新しい順</option>
+        <option value="created"  {% if request.GET.sort == "created" %}selected{% endif %}>古い順</option>
+        <option value="-id"      {% if request.GET.sort == "-id" %}selected{% endif %}>ID降順</option>
+        <option value="id"       {% if request.GET.sort == "id" %}selected{% endif %}>ID昇順</option>
+        <option value="author"   {% if request.GET.sort == "author" %}selected{% endif %}>担当者A→Z</option>
+        <option value="-author"  {% if request.GET.sort == "-author" %}selected{% endif %}>担当者Z→A</option>
+      </select>
+    </div>
+
+    <!-- 件数/頁 -->
+    <div class="col-6 col-md-2">
+      <label class="form-label">件数/頁</label>
+      <select name="per_page" class="form-select fn-select">
+        <option value="10" {% if request.GET.per_page == "10" or not request.GET.per_page %}selected{% endif %}>10</option>
+        <option value="20" {% if request.GET.per_page == "20" %}selected{% endif %}>20</option>
+        <option value="50" {% if request.GET.per_page == "50" %}selected{% endif %}>50</option>
+        <option value="100" {% if request.GET.per_page == "100" %}selected{% endif %}>100</option>
+      </select>
+    </div>
+
+    <!-- ボタン -->
+    <div class="col-12 d-flex fn-actions flex-wrap">
+      <button class="btn btn-primary">絞り込み</button>
+      <a class="btn btn-outline-secondary" href="{% url 'reports:report_list' %}">リセット</a>
+      <a class="btn btn-outline-info"
+         href="{% url 'reports:report_export_csv' %}?{{ request.GET.urlencode }}">
+        CSV
+      </a>
+      <a class="btn btn-success ms-auto" href="{% url 'reports:report_create' %}">＋ 新規作成</a>
+      <a class="btn btn-outline-dark ms-2" href="{% url 'reports:dashboard' %}">📊 ダッシュボードへ</a>
+    </div>
+  </form>
+
+  <!-- 一覧 -->
+  {% if reports %}
     <div class="table-responsive">
-      <table class="table table-hover">
+      <table class="table table-dark table-striped align-middle">
         <thead>
           <tr>
-            <th>場所</th>
-            <th>進捗</th>
-            <th>作業時間</th>
-            <th>作成者</th>
-            <th>作成日</th>
-            <th>操作</th>
+            <th style="width: 6rem;">ID</th>
+            <th style="width: 14rem;">作成日時</th>
+            <th>タイトル / 本文</th>
+            <th style="width: 10rem;">担当者</th>
+            <th style="width: 8rem;"></th>
           </tr>
         </thead>
         <tbody>
-          {% for report in reports %}
-          <tr>
-            <td>{{ report.location }}</td>
-            <td>{{ report.get_progress_display }}</td>
-            <td>{{ report.work_hours }}</td>
-            <td>{{ report.author.username }}</td>
-            <td>{{ report.created_at|date:"Y-m-d H:i" }}</td>
-            <td>
-              <a href="{{ report.get_absolute_url }}" class="btn btn-sm btn-info">詳細</a>
-            </td>
-          </tr>
-          {% empty %}
-          <tr>
-            <td colspan="6" class="text-center">まだ日報はありません。</td>
-          </tr>
+          {% for r in reports %}
+            <tr>
+              <td>#{{ r.id }}</td>
+              <td>
+                {% if r.created_at %}{{ r.created_at|date:"Y-m-d H:i" }}
+                {% elif r.date %}{{ r.date|date:"Y-m-d" }}
+                {% elif r.report_date %}{{ r.report_date|date:"Y-m-d" }}
+                {% else %}-{% endif %}
+              </td>
+              <td>
+                <div class="fw-semibold">
+                  {% if r.title %}{{ r.title }}{% else %}(無題){% endif %}
+                  {% if r.location %}<span class="text-secondary ms-2">— {{ r.location }}</span>{% endif %}
+                </div>
+                {% if r.content %}
+                  <div class="text-secondary small text-truncate" style="max-width: 70ch;">
+                    {{ r.content|striptags }}
+                  </div>
+                {% endif %}
+              </td>
+              <td>
+                {% if r.author %}{{ r.author.username|default:r.author }}{% else %}-{% endif %}
+              </td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-light" href="{% url 'reports:report_detail' r.pk %}">詳細</a>
+              </td>
+            </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-  </div>
+
+    <!-- ページネーション -->
+    {% if is_paginated %}
+      <nav class="mt-3" aria-label="Page navigation">
+        <ul class="pagination">
+          {% if page_obj.has_previous %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">«</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">«</span></li>
+          {% endif %}
+
+          <li class="page-item disabled">
+            <span class="page-link">
+              {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
+            </span>
+          </li>
+
+          {% if page_obj.has_next %}
+            <li class="page-item">
+              <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">»</a>
+            </li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">»</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="alert alert-info">該当するレポートがありません。</div>
+  {% endif %}
 </div>
-
-{% if is_paginated %}
-<nav aria-label="Page navigation" class="mt-4">
-  <ul class="pagination justify-content-center">
-
-    {% if page_obj.has_previous %}
-      <li class="page-item">
-        <a class="page-link" href="?page={{ page_obj.previous_page_number }}" aria-label="Previous">
-          <span aria-hidden="true">&laquo;</span>
-        </a>
-      </li>
-    {% else %}
-      <li class="page-item disabled">
-        <span class="page-link" aria-hidden="true">&laquo;</span>
-      </li>
-    {% endif %}
-
-    {% for num in page_obj.paginator.page_range %}
-      {% if page_obj.number == num %}
-        <li class="page-item active" aria-current="page">
-          <span class="page-link">{{ num }}</span>
-        </li>
-      {% else %}
-        <li class="page-item">
-          <a class="page-link" href="?page={{ num }}">{{ num }}</a>
-        </li>
-      {% endif %}
-    {% endfor %}
-
-    {% if page_obj.has_next %}
-      <li class="page-item">
-        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Next">
-          <span aria-hidden="true">&raquo;</span>
-        </a>
-      </li>
-    {% else %}
-      <li class="page-item disabled">
-        <span class="page-link" aria-hidden="true">&raquo;</span>
-      </li>
-    {% endif %}
-    
-  </ul>
-</nav>
-{% endif %}
 {% endblock %}

@@ -1,85 +1,75 @@
-{% extends 'base.html' %}
+{# templates/reports/todo_list.html #}
+{% extends "base.html" %}
 {% load static %}
-
-{% block title %}ToDoリスト{% endblock %}
+{% block title %}必要物品（ToDo・2列）{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<div class="card shadow-soft">
+  <div class="card-header">必要物品リスト</div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-striped mb-0" id="todoTable">
+        <thead>
+          <tr>
+            <th style="width: 180px;">投稿日</th>
+            <th>必要なもの</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if todos %}
+            {% for t in todos %}
+              <tr>
+                <td class="text-nowrap">
+                  {% if t.created_at %}
+                    {{ t.created_at|date:"Y-m-d H:i" }}
+                  {% elif t.updated_at %}
+                    {{ t.updated_at|date:"Y-m-d H:i" }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  <strong>
+                    {# 品目名（存在する候補からフォールバック） #}
+                    {% if t.name %}{{ t.name }}
+                    {% elif t.title %}{{ t.title }}
+                    {% elif t.subject %}{{ t.subject }}
+                    {% else %}(名称未設定){% endif %}
+                  </strong>
+                  {# 数量・単位（存在時のみ） #}
+                  {% if t.quantity %} × {{ t.quantity|floatformat:-2 }}{% endif %}
+                  {% if t.unit %} {{ t.unit }}{% endif %}
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4 rounded">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="#">分析</a>
-            <div class="navbar-nav">
-                {# ↓ 名前空間 'reports:' を追加 #}
-                <a class="nav-link" href="{% url 'reports:dashboard' %}">グラフ</a>
-                {# ↓ 名前空間 'reports:' を追加 #}
-                <a class="nav-link active" href="{% url 'reports:todo_list' %}">ToDoリスト</a>
-            </div>
-        </div>
-    </nav>
+                  {# 補足（任意：メモ/備考/説明） #}
+                  {% if t.memo or t.note or t.remarks or t.description %}
+                    <div class="text-muted small mt-1">
+                      {{ t.memo|default:t.note|default:t.remarks|default:t.description }}
+                    </div>
+                  {% endif %}
 
-    <h1>必要物品リスト (ToDo)</h1>
-
-    <form method="get" class="row gy-2 gx-2 align-items-end mb-3 bg-white p-3 border rounded">
-        <div class="col-auto">
-            <label class="form-label d-block">表示</label>
-            <div class="btn-group" role="group">
-                <a class="btn btn-sm btn-outline-secondary {% if show != 'all' %}active{% endif %}" href="?show=open{% if case %}&case={{ case|urlencode }}{% endif %}">未完了のみ</a>
-                <a class="btn btn-sm btn-outline-secondary {% if show == 'all' %}active{% endif %}" href="?show=all{% if case %}&case={{ case|urlencode }}{% endif %}">すべて</a>
-            </div>
-        </div>
-
-        <div class="col-auto">
-            <label for="case" class="form-label">案件名</label>
-            <input id="case" name="case" value="{{ case }}" class="form-control form-control-sm" placeholder="例: 新倉庫の設計">
-        </div>
-
-        <div class="col-auto">
-            <label class="form-label d-block">&nbsp;</label>
-            <button class="btn btn-sm btn-primary">絞り込み</button>
-            {# ↓ 名前空間 'reports:' を追加 #}
-            <a class="btn btn-sm btn-secondary" href="{% url 'reports:todo_list' %}">リセット</a>
-        </div>
-
-        <div class="col-auto ms-auto">
-            <label class="form-label d-block">&nbsp;</label>
-            {# ↓ 名前空間 'reports:' を追加 #}
-            <a class="btn btn-sm btn-outline-primary" href="{% url 'reports:todo_export_csv' %}?show={{ show }}{% if case %}&case={{ case|urlencode }}{% endif %}">CSV出力</a>
-        </div>
-    </form>
-
-    <div class="card">
-        <div class="card-body p-0">
-            <table class="table table-sm mb-0 align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width:110px;">操作</th>
-                        <th>項目</th>
-                        <th style="width:25%;">案件</th>
-                        <th style="width:20%;">状態</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for t in todos %}
-                    <tr>
-                        <td>
-                            {# ↓ URL名を修正し、名前空間 'reports:' を追加 #}
-                            <form action="{% url 'reports:todo_toggle' t.pk %}" method="post" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-sm btn-success">完了/未完了</button>
-                            </form>
-                        </td>
-                        <td>{{ t.title }}</td>
-                        <td>{{ t.deal.deal_name|default:"-" }}</td>
-                        <td>{% if t.is_done %}完了{% else %}未完了{% endif %}</td>
-                    </tr>
-                    {% empty %}
-                    <tr><td colspan="4" class="text-center py-4">ToDoはありません。</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+                  {# 元レポートへリンク（存在する場合のみ。URL名は環境に合わせて） #}
+                  {% if t.source_report_id or t.report_id %}
+                    <div class="mt-1">
+                      {# reports:report_detail がある場合だけ有効化 #}
+                      {# <a class="small" href="{% url 'reports:report_detail' t.source_report_id|default:t.report_id %}">
+                           出典: 日報 #{{ t.source_report_id|default:t.report_id }}
+                         </a> #}
+                      <span class="small text-muted">出典: 日報 #{{ t.source_report_id|default:t.report_id }}</span>
+                    </div>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="2" class="text-center">
+                該当するレコードはありません。
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
     </div>
-
+  </div>
 </div>
 {% endblock %}

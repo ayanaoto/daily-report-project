@@ -1,0 +1,30 @@
+/* ===== FieldNote custom overrides ===== */
+
+/* 見出しを白で統一 */
+h1, h2, h3, h4, h5, h6 { color: #fff !important; }
+
+/* ---- ダッシュボード全域を白文字ベース ---- */
+.page-dashboard,
+.page-dashboard * { color: #fff !important; }
+
+/* KPI カードの文字を更にくっきり */
+.kpi-card .kpi-label { font-size: .95rem; opacity: .9; }
+.kpi-card .kpi-value { font-size: 2.25rem; font-weight: 800; }
+
+/* テーブルの可読性アップ */
+.dashboard-table thead th {
+  color: #fff !important;
+  border-bottom: 1px solid #3b4450 !important;
+}
+.dashboard-table tbody td, .dashboard-table tbody th {
+  border-top: 1px solid #2f3640 !important;
+}
+
+/* カードのヘッダーも白 */
+.card-header { color: #fff !important; }
+
+/* Chart 背景は透過、凡例や軸は JS 側で白指定 */
+.page-dashboard canvas { background: transparent !important; }
+
+/* section 見出し */
+.section-title { font-size: 1.25rem; font-weight: 700; }

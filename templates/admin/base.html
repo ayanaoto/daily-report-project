@@ -2,6 +2,6 @@
 
 {# ヘッダー右上のユーザーリンク部分を上書きする #}
 {% block userlinks %}
-    {# メインサイトのダッシュボードへのリンクだけを表示する #}
-    <a href="{% url 'dashboard' %}" class="btn btn-outline-primary btn-sm">メインサイトに戻る</a>
+    {# "dashboard" への reverse をやめ、存在する URL にする #}
+    <a href="{{ site_url|default:'/' }}" class="btn btn-outline-primary btn-sm">メインサイトに戻る</a>
 {% endblock %}

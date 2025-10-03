@@ -1,0 +1,177 @@
+/* ==================================================================
+   FieldNote - Admin-like Dark Theme (Jazzmin "darkly" inspired)
+   置くだけで：背景/文字/フォーム/テーブル/カード/ドロップダウン/ページネーション
+   をサイト全体で統一。Bootstrap 5 を前提。 
+   ================================================================== */
+
+/* ---- 基本パレット（必要ならここだけ好きな色に） ------------------ */
+:root {
+  --fd-bg:           #1e2125; /* ページ背景 */
+  --fd-surface:      #2b3036; /* カード/フォーム背景 */
+  --fd-surface-2:    #343a40; /* もう一段濃い面 */
+  --fd-border:       #3a4049;
+  --fd-text:         #e9ecef; /* 通常文字 */
+  --fd-text-muted:   #adb5bd;
+  --fd-link:         #74b0ff;
+  --fd-link-hover:   #9ac6ff;
+
+  --fd-primary: #0d6efd;
+  --fd-success: #2ecc71;
+  --fd-info:    #0dcaf0;
+  --fd-warning: #ffc107;
+  --fd-danger:  #ff6b6b;
+
+  --fd-focus-ring: rgba(13,110,253,.25);
+}
+
+/* ---- ページ全体 --------------------------------------------------- */
+html { background: var(--fd-bg); }
+body {
+  color: var(--fd-text);
+  background: var(--fd-bg);
+}
+
+/* スクロールバー（Chrome） */
+*::-webkit-scrollbar{height:12px;width:12px}
+*::-webkit-scrollbar-thumb{background:#4a4f57;border-radius:8px;border:3px solid #1e2125}
+*::-webkit-scrollbar-track{background:#1e2125}
+
+/* ---- 見出し＆テキスト --------------------------------------------- */
+h1,h2,h3,h4,h5,h6 { color: var(--fd-text); }
+
+/* ---- リンク ------------------------------------------------------- */
+a { color: var(--fd-link); }
+a:hover, a:focus { color: var(--fd-link-hover); }
+
+/* ---- ナビバー ----------------------------------------------------- */
+.navbar,
+.navbar-dark,
+.navbar.bg-dark,
+.navbar .dropdown-menu {
+  background: var(--fd-surface);
+  color: var(--fd-text);
+}
+.navbar .nav-link,
+.navbar .navbar-brand { color: var(--fd-text); }
+.navbar .nav-link:hover,
+.navbar .nav-link:focus { color: #fff; }
+
+/* ---- ドロップダウン ----------------------------------------------- */
+.dropdown-menu {
+  background: var(--fd-surface);
+  border: 1px solid var(--fd-border);
+  color: var(--fd-text);
+}
+.dropdown-item { color: var(--fd-text); }
+.dropdown-item:hover,
+.dropdown-item:focus,
+.dropdown-item.active {
+  background: var(--fd-surface-2);
+  color: #fff;
+}
+
+/* ---- カード/モーダル/アラート ------------------------------------- */
+.card, .modal-content {
+  background: var(--fd-surface);
+  border: 1px solid var(--fd-border);
+  color: var(--fd-text);
+}
+.alert {
+  border: 1px solid var(--fd-border);
+  color: var(--fd-text);
+}
+.alert-info    { background:#173246; border-color:#1f4964; }
+.alert-success { background:#193222; border-color:#2b5a3f; }
+.alert-warning { background:#3d2f16; border-color:#5a431a; color:#ffde8a; }
+.alert-danger  { background:#3b2024; border-color:#6b2a32; }
+
+/* ---- テーブル ----------------------------------------------------- */
+.table {
+  color: var(--fd-text);
+  --bs-table-color: var(--fd-text);
+  --bs-table-bg: var(--fd-surface);
+  --bs-table-border-color: var(--fd-border);
+  --bs-table-striped-bg: #262b31;
+  --bs-table-hover-bg: #2f353c;
+}
+.table thead th { color:#fff; border-bottom:2px solid var(--fd-border); }
+
+/* ---- フォーム（入力/セレクト/テキストエリア/チェック） ------------ */
+.form-control,
+.form-select,
+.input-group-text,
+textarea,
+select,
+input {
+  color: var(--fd-text);
+  background: var(--fd-surface) !important;
+  border: 1px solid var(--fd-border);
+}
+.form-control::placeholder { color: var(--fd-text-muted); }
+.form-control:focus,
+.form-select:focus,
+textarea:focus,
+select:focus,
+input:focus {
+  color: var(--fd-text);
+  background: var(--fd-surface);
+  border-color: var(--fd-primary);
+  box-shadow: 0 0 0 .25rem var(--fd-focus-ring);
+  outline: none;
+}
+
+/* Chrome autofill の黄バックを打ち消す */
+input:-webkit-autofill,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+  -webkit-text-fill-color: var(--fd-text);
+  -webkit-box-shadow: 0 0 0px 1000px var(--fd-surface) inset;
+  box-shadow: 0 0 0px 1000px var(--fd-surface) inset;
+}
+
+/* 日付ピッカーアイコン */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) opacity(.9);
+}
+
+/* ---- ボタン ------------------------------------------------------- */
+.btn { border-width: 1px; }
+.btn-primary {
+  background: var(--fd-primary);
+  border-color: var(--fd-primary);
+  color:#fff;
+}
+.btn-outline-secondary {
+  color: var(--fd-text);
+  border-color: var(--fd-border);
+}
+.btn-outline-secondary:hover {
+  background: var(--fd-surface-2);
+  color:#fff;
+}
+
+/* 成功/情報/警告/危険 */
+.btn-success { background: var(--fd-success); border-color: var(--fd-success); }
+.btn-info    { background: var(--fd-info);    border-color: var(--fd-info); }
+.btn-warning { background: var(--fd-warning); border-color: var(--fd-warning); color:#222; }
+.btn-danger  { background: var(--fd-danger);  border-color: var(--fd-danger); }
+
+/* ---- ページネーション --------------------------------------------- */
+.pagination .page-link {
+  background: var(--fd-surface);
+  color: var(--fd-text);
+  border-color: var(--fd-border);
+}
+.pagination .page-link:hover { background: var(--fd-surface-2); color:#fff; }
+.pagination .page-item.active .page-link {
+  background: var(--fd-primary);
+  border-color: var(--fd-primary);
+}
+
+/* ---- フッター ----------------------------------------------------- */
+footer,
+.footer {
+  color: var(--fd-text-muted);
+  background: var(--fd-bg);
+  border-top: 1px solid var(--fd-border);
+}

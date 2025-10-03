@@ -1,151 +1,125 @@
 {% extends "base.html" %}
+{% load static %}
 
-{% block title %}ダッシュボード{% endblock %}
+{% block title %}日報 統計ダッシュボード{% endblock %}
 
-{% block page_title %}ダッシュボード{% endblock %}
+{% block extra_head %}
+<style>
+  /* ——— ダッシュボードの可読性強化（色・太さのみ） ——— */
+  .db-title{
+    font-size:2rem; font-weight:800; letter-spacing:.02em;
+    color:#0f172a;  /* 濃紺でくっきり */
+  }
+  .db-subtle{ color:#334155; }             /* ラベル系は中濃色 */
+  .db-card{ background:#ffffff; border:1px solid #e5e7eb; border-radius:.75rem; }
+  .db-card header{
+    padding:.9rem 1rem; border-bottom:1px solid #e5e7eb;
+    color:#0f172a; font-weight:700;
+  }
+  .db-card .db-body{ padding:1rem; color:#0b0f14; }
+  .kpi{
+    display:flex; gap:1rem; flex-wrap:wrap;
+  }
+  .kpi .item{
+    flex:1 1 220px; background:#ffffff; border:1px solid #e5e7eb; border-radius:.75rem;
+    padding:1rem;
+  }
+  .kpi .item .label{ color:#475569; font-weight:600; }
+  .kpi .item .value{ font-size:1.8rem; font-weight:800; color:#0f172a; }
+  .table-kv{ width:100%; }
+  .table-kv th, .table-kv td{ padding:.5rem .6rem; border-top:1px solid #eef2f7; }
+  .table-kv th{ width:60%; color:#0f172a; font-weight:700; }
+  .hint{ color:#64748b; font-size:.9rem; }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row g-4">
-  <div class="col-lg-6">
-    <div class="card">
-      <div class="card-header">
-        ユーザー別のレポート件数
-      </div>
-      <div class="card-body">
-        <canvas id="userReportChart"></canvas>
-      </div>
+<div class="container py-4">
+
+  <h1 class="db-title mb-3">日報 統計ダッシュボード</h1>
+  <p class="db-subtle mb-4">ページ読み込み時点の集計。絞り込み・CSVは「レポート一覧」で行えます。</p>
+
+  <!-- KPI（今日／今月） -->
+  <div class="kpi mb-4">
+    <div class="item">
+      <div class="label">本日のレポート件数</div>
+      <div class="value">{{ today_count|default:0 }}</div>
+    </div>
+    <div class="item">
+      <div class="label">今月のレポート件数</div>
+      <div class="value">{{ month_count|default:0 }}</div>
+    </div>
+    <div class="item">
+      <div class="label">本日の作業時間（時間・合計）</div>
+      <div class="value">{{ today_hours|default:"0.0" }}</div>
+    </div>
+    <div class="item">
+      <div class="label">今月の作業時間（時間・合計）</div>
+      <div class="value">{{ month_hours|default:"0.0" }}</div>
     </div>
   </div>
 
-  <div class="col-lg-6">
-    <div class="card">
-      <div class="card-header">
-        あなたの進捗状況
-      </div>
-      <div class="card-body">
-        <canvas id="progressChart"></canvas>
-      </div>
+  <div class="row g-4">
+    <!-- 1) 場所 別 件数（上位）– グラフ置き場（後でJSで差し替えられるよう空DIV） -->
+    <div class="col-12 col-lg-6">
+      <section class="db-card">
+        <header>場所別 件数（上位）</header>
+        <div class="db-body">
+          <div id="chart-location" class="w-100" style="height:280px;"></div>
+          <p class="hint mt-2">※ 可視化は後から追加してOK。まずは枠のみ。</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 2) 進捗 内訳 – グラフ置き場 -->
+    <div class="col-12 col-lg-6">
+      <section class="db-card">
+        <header>進捗 内訳</header>
+        <div class="db-body">
+          <div id="chart-progress" class="w-100" style="height:280px;"></div>
+          <p class="hint mt-2">進捗フィールドがある場合に集計対象。</p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 3) 人物（担当/作成者）別 件数（上位） – サマリ表 -->
+    <div class="col-12 col-lg-6">
+      <section class="db-card h-100">
+        <header>人物（担当/作成者）別 件数（上位）</header>
+        <div class="db-body">
+          {% if by_author %}
+            <table class="table-kv">
+              <tbody>
+              {% for row in by_author %}
+                <tr>
+                  <th>{{ row.author__username|default:"(不明)" }}</th>
+                  <td>{{ row.cnt }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p class="mb-0">データがありません。</p>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+
+    <!-- 4) 作業時間（分） 合計 | 直近30日 – グラフ置き場 -->
+    <div class="col-12 col-lg-6">
+      <section class="db-card h-100">
+        <header>作業時間（分）合計｜直近30日</header>
+        <div class="db-body">
+          <div id="chart-hours" class="w-100" style="height:280px;"></div>
+          <p class="hint mt-2">`work_hours` がある場合に集計可能。</p>
+        </div>
+      </section>
     </div>
   </div>
 
-  <div class="col-12">
-    <div class="card">
-      <div class="card-header">
-        場所ごとの合計作業時間
-      </div>
-      <div class="card-body">
-        <canvas id="hoursChart"></canvas>
-      </div>
-    </div>
-  </div>
 </div>
+{% endblock %}
 
-{# Chart.jsライブラリの読み込み #}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-{# DjangoのデータをJavaScriptに渡す #}
-{{ user_chart_labels|json_script:"user-chart-labels" }}
-{{ user_chart_data|json_script:"user-chart-data" }}
-{{ progress_chart_labels|json_script:"progress-chart-labels" }}
-{{ progress_chart_data|json_script:"progress-chart-data" }}
-{{ location_chart_labels|json_script:"location-chart-labels" }}
-{{ location_chart_data|json_script:"location-chart-data" }}
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // --- グラフの共通設定（ダークテーマ用） ---
-  const textColor = '#E5E7EB'; // 文字色
-  const gridColor = 'rgba(229, 231, 235, 0.2)'; // グラフの補助線の色
-
-  // --- グラフ1の描画 ---
-  const userLabels = JSON.parse(document.getElementById('user-chart-labels').textContent);
-  const userData = JSON.parse(document.getElementById('user-chart-data').textContent);
-  const userCtx = document.getElementById('userReportChart').getContext('2d');
-  new Chart(userCtx, {
-    type: 'bar',
-    data: {
-      labels: userLabels,
-      datasets: [{
-        label: 'レポート件数',
-        data: userData,
-        backgroundColor: 'rgba(56, 189, 248, 0.5)',
-        borderColor: 'rgba(56, 189, 248, 1)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      plugins: { legend: { labels: { color: textColor } } },
-      scales: {
-        y: { 
-          beginAtZero: true, 
-          ticks: { color: textColor, stepSize: 1 },
-          grid: { color: gridColor }
-        },
-        x: {
-          ticks: { color: textColor },
-          grid: { color: gridColor }
-        }
-      }
-    }
-  });
-
-  // --- グラフ2の描画 ---
-  const progressLabels = JSON.parse(document.getElementById('progress-chart-labels').textContent);
-  const progressData = JSON.parse(document.getElementById('progress-chart-data').textContent);
-  const progressCtx = document.getElementById('progressChart').getContext('2d');
-  new Chart(progressCtx, {
-    type: 'doughnut',
-    data: {
-      labels: progressLabels,
-      datasets: [{
-        label: '件数',
-        data: progressData,
-        backgroundColor: [
-          'rgba(239, 68, 68, 0.6)',
-          'rgba(56, 189, 248, 0.6)',
-          'rgba(16, 185, 129, 0.6)'
-        ],
-        borderColor: [ '#EF4444', '#38BDF8', '#10B981' ],
-        borderWidth: 1
-      }]
-    },
-    options: {
-      plugins: { legend: { labels: { color: textColor } } }
-    }
-  });
-
-  // --- グラフ3の描画 ---
-  const locationLabels = JSON.parse(document.getElementById('location-chart-labels').textContent);
-  const locationData = JSON.parse(document.getElementById('location-chart-data').textContent);
-  const hoursCtx = document.getElementById('hoursChart').getContext('2d');
-  new Chart(hoursCtx, {
-    type: 'bar',
-    data: {
-      labels: locationLabels,
-      datasets: [{
-        label: '合計作業時間 (時間)',
-        data: locationData,
-        backgroundColor: 'rgba(16, 185, 129, 0.5)',
-        borderColor: 'rgba(16, 185, 129, 1)',
-        borderWidth: 1
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      plugins: { legend: { labels: { color: textColor } } },
-      scales: {
-        x: { 
-          beginAtZero: true,
-          ticks: { color: textColor },
-          grid: { color: gridColor }
-        },
-        y: {
-          ticks: { color: textColor },
-          grid: { color: gridColor }
-        }
-      }
-    }
-  });
-});
-</script>
+{% block extra_js %}
+{# 将来的にグラフJSを入れるならここに。今回は見た目のみ強化。 #}
 {% endblock %}
