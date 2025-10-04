@@ -19,3 +19,8 @@ media/
 Key*.txt
 *.key
 *.pem
+.env
+.env.*
+Key*.txt
+*.key
+*.pem
