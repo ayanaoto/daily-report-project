@@ -1,26 +1,21 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
+# Virtualenv
+.venv/
+venv/
 
-# Django
-*.log
+# Python cache
+__pycache__/
+*.pyc
+
+# Django local files
 db.sqlite3
+*.log
 staticfiles/
 media/
 
-# Environment
-.venv/
+# Secrets
 .env
 
-# Editor
-.vscode/.env
-.env.*
-Key*.txt
-*.key
-*.pem
-.env
-.env.*
-Key*.txt
-*.key
-*.pem
+# Editor/OS files
+.vscode/
+.idea/
+.DS_Store

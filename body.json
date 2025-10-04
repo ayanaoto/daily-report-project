@@ -1,4 +1,1 @@
-﻿{
-    "text":  "テスト from PS",
-    "intent":  "note"
-}
+﻿{"text":"hello via curl","intent":"note"}
