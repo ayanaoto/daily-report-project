@@ -64,7 +64,7 @@
   }
   .id-copy:hover { background:#f3f9fc; }
 
-  /* ▼▼▼▼▼ スマホ表示の修正 ▼▼▼▼▼ */
+  /* スマホ表示の修正 */
   @media (max-width: 900px) {
     #tblDrafts thead { display: none; } /* スマホではヘッダーを非表示 */
     #tblDrafts tr, #tblDrafts td { display: block; width: 100% !important; border:0 !important; }
@@ -85,7 +85,6 @@
       color: #2a6078;
     }
   }
-  /* ▲▲▲▲▲ ここまで修正 ▲▲▲▲▲ */
 
   /* 簡易モーダル（白基調） */
   .vl-modal-mask { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; z-index:1050; }
@@ -113,39 +112,7 @@
 <div class="container" style="max-width:980px">
   <div class="d-flex align-items-center justify-content-between mb-3">
     <h1 class="mb-0">NeoInfinity Voice Logger</h1>
-    <button id="btnToggleSettings" class="btn btn-outline-primary" title="設定を表示/非表示">設定</button>
-  </div>
-
-  <div id="settingsPanel" class="card mb-3" style="display:none">
-    <div class="card-body">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label">Voice</label>
-          <input id="voice" class="form-control" value="ja-JP-NanamiNeural">
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Style</label>
-          <input id="style" class="form-control" value="chat">
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">Style Degree</label>
-          <input id="styledegree" class="form-control" type="number" step="0.1" min="0" max="2" value="1.1">
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">Rate</label>
-          <input id="rate" class="form-control" value="-6%">
-        </div>
-        <div class="col-md-1">
-          <label class="form-label">Pitch</label>
-          <input id="pitch" class="form-control" value="+1%">
-        </div>
-        <div class="col-12">
-          <label class="form-label">Output Format</label>
-          <input id="format" class="form-control" value="audio-24khz-48kbitrate-mono-mp3">
-        </div>
-      </div>
     </div>
-  </div>
 
   <div class="card mb-3">
     <div class="card-body">
@@ -226,14 +193,13 @@
   const btnSave  = document.getElementById("btnSave");
   const btnClear = document.getElementById("btnClear");
   const btnTTS   = document.getElementById("btnSpeak");
-  const settings = document.getElementById("settingsPanel");
-  const btnGear  = document.getElementById("btnToggleSettings");
   const tbody    = document.querySelector("#tblDrafts tbody");
   const btnSync  = document.getElementById("btnSync");
   const btnPurge = document.getElementById("btnPurge");
   const player   = document.getElementById("player");
   const dlWrap   = document.getElementById("dlLinkWrap");
   const dlLink   = document.getElementById("dlLink");
+  // 「設定」関連のJavaScript変数を削除しました
 
   const alertMsg = (m) => window.alert(m);
   const genLocalId = () => `L${Date.now()}${Math.random().toString(36).slice(2,8)}`;
@@ -405,17 +371,17 @@
   }
 
   async function playTextTTS(text) {
-    const voice  = document.getElementById("voice")?.value || "ja-JP-NanamiNeural";
-    const style  = document.getElementById("style")?.value || "";
-    const degree = document.getElementById("styledegree")?.value || null;
-    const rate   = document.getElementById("rate")?.value || "-6%";
-    const pitch  = document.getElementById("pitch")?.value || "+1%";
-    const format = document.getElementById("format")?.value || "audio-24khz-48kbitrate-mono-mp3";
+    const voice  = "ja-JP-NanamiNeural";
+    const style  = "chat";
+    const degree = 1.1;
+    const rate   = "-6%";
+    const pitch  = "+1%";
+    const format = "audio-24khz-48kbitrate-mono-mp3";
 
     const res = await fetch("/api/tts/", {
       method: "POST",
       headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ text, voice, style, styledegree: degree? Number(degree): null, rate, pitch, format }),
+      body: JSON.stringify({ text, voice, style, styledegree: degree, rate, pitch, format }),
     });
     if (!res.ok) {
       const t = await res.text().catch(()=> "");
@@ -460,9 +426,7 @@
     rec.onend   = ()=>{ sttInterim=""; elText.value=sttCommitted; renderPreview(); };
   }
 
-  document.getElementById("btnToggleSettings").addEventListener("click", ()=>{
-    settings.style.display = (settings.style.display==="none" || !settings.style.display) ? "block":"none";
-  });
+  // 「設定」ボタンのイベントリスナーを削除しました
   btnClear.addEventListener("click", ()=>{ elText.value=""; renderPreview(); elText.focus(); });
   btnSave .addEventListener("click", ()=> onSaveClicked().catch(e=>{console.error(e); alertMsg("保存失敗: "+(e?.message??"unknown"));}));
   btnSync .addEventListener("click", ()=> syncAll().catch(e=>{console.error(e); alertMsg("同期失敗: "+(e?.message??"unknown"));}));
@@ -474,8 +438,15 @@
     let timer=null, longPressed=false;
     const down=()=>{ longPressed=false; timer=setTimeout(()=>{ longPressed=true; if(!rec){alertMsg("このブラウザは音声入力に対応していません（Chrome推奨）"); return;} try{rec.start();}catch{} },600); };
     const up  =()=>{ clearTimeout(timer); if(longPressed){ try{rec && rec.stop && rec.stop();}catch{} } else { doTTS().catch(e=>{console.error(e); alertMsg("TTS失敗: "+(e?.message??"unknown"));}); } };
-    btnTTS.addEventListener("mousedown",down);   btnTTS.addEventListener("mouseup",up);     btnTTS.addEventListener("mouseleave",up);
-    btnTTS.addEventListener("touchstart",down,{passive:true}); btnTTS.addEventListener("touchend",up); btnTTS.addEventListener("touchcancel",up);
+    btnTTS.addEventListener("mousedown",down);
+    btnTTS.addEventListener("mouseup",up);
+    btnTTS.addEventListener("mouseleave",up);
+    btnTTS.addEventListener("touchstart",down,{passive:true});
+    btnTTS.addEventListener("touchend",up);
+    btnTTS.addEventListener("touchcancel",up);
+    
+    // スマホでの長押し時に、ブラウザのデフォルトメニューが表示されるのを防ぐ
+    btnTTS.addEventListener("contextmenu", (e) => e.preventDefault());
   }
 
   renderTable();
