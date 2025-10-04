@@ -5,6 +5,7 @@ Django settings for daily_report_project.
 
 from pathlib import Path
 import os
+import dj_database_url  # Renderのデータベース設定に必要
 
 # プロジェクトルート（…/daily_report_project）
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,7 +16,9 @@ load_dotenv(dotenv_path=BASE_DIR / ".env", override=False)
 
 # ここから通常の設定
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "dev-secret-key")
-DEBUG = os.getenv("DJANGO_DEBUG", "").lower() in ("1", "true", "yes")
+
+# Renderの本番環境では DEBUG=False になるように修正
+DEBUG = os.getenv("DJANGO_DEBUG", "false").lower() == "true"
 
 ALLOWED_HOSTS = [
     *[h.strip() for h in os.getenv("ALLOWED_HOSTS", "").split(",") if h.strip()],
@@ -31,6 +34,7 @@ INSTALLED_APPS = [
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
+    "whitenoise.runserver_nostatic",  # WhiteNoiseをAdminより上に配置
     "django.contrib.staticfiles",
     "corsheaders",
     "reports",
@@ -39,7 +43,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # WhiteNoiseのミドルウェア
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -69,12 +73,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "daily_report_project.wsgi.application"
 
+# ▼▼▼▼▼ データベース設定をRender用に修正 ▼▼▼▼▼
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
+    'default': dj_database_url.config(
+        # ローカルでDATABASE_URLが設定されていない場合は、SQLiteを使用する
+        default=f'sqlite:///{BASE_DIR / "db.sqlite3"}'
+    )
 }
+# ▲▲▲▲▲ ここまで修正 ▲▲▲▲▲
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
@@ -103,8 +109,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 FIELDNOTE_API_TOKEN = os.getenv("FIELDNOTE_API_TOKEN", "")
 CORS_ALLOW_ALL_ORIGINS = True
 
-# ▼▼▼▼▼ ここから追記 ▼▼▼▼▼
 AZURE_SPEECH_KEY = os.getenv('AZURE_SPEECH_KEY')
 AZURE_SPEECH_REGION = os.getenv('AZURE_SPEECH_REGION')
 AZURE_SPEECH_VOICE = os.getenv('AZURE_SPEECH_VOICE')
+
+# ▼▼▼▼▼ ここから追記 ▼▼▼▼▼
+# Renderのホスト名を自動でALLOWED_HOSTSに追加する
+if external_host := os.getenv('RENDER_EXTERNAL_HOSTNAME'):
+    ALLOWED_HOSTS.append(external_host)
 # ▲▲▲▲▲ ここまで追記 ▲▲▲▲▲
