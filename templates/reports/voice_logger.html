@@ -64,11 +64,28 @@
   }
   .id-copy:hover { background:#f3f9fc; }
 
+  /* ▼▼▼▼▼ スマホ表示の修正 ▼▼▼▼▼ */
   @media (max-width: 900px) {
-    #tblDrafts .col-id { width: 100%; }
+    #tblDrafts thead { display: none; } /* スマホではヘッダーを非表示 */
+    #tblDrafts tr, #tblDrafts td { display: block; width: 100% !important; border:0 !important; }
+    #tblDrafts tr { border-top: 2px solid #2a6078; padding-bottom: 1rem; }
+    #tblDrafts td { padding: .4rem .2rem !important; }
+    #tblDrafts .col-id { background: transparent; }
+    #tblDrafts .col-ts, #tblDrafts .col-ops { white-space: normal; }
+
     .id-wrap { flex-direction: column; align-items: stretch; gap:.4rem; }
     .id-copy { width:100%; text-align:center; }
+
+    /* 各セルの前にラベルを追加して分かりやすくする */
+    #tblDrafts td:before {
+      content: attr(data-label);
+      font-weight: bold;
+      display: block;
+      margin-bottom: .2rem;
+      color: #2a6078;
+    }
   }
+  /* ▲▲▲▲▲ ここまで修正 ▲▲▲▲▲ */
 
   /* 簡易モーダル（白基調） */
   .vl-modal-mask { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; z-index:1050; }
@@ -94,13 +111,11 @@
 </style>
 
 <div class="container" style="max-width:980px">
-  <!-- 見出し -->
   <div class="d-flex align-items-center justify-content-between mb-3">
     <h1 class="mb-0">NeoInfinity Voice Logger</h1>
     <button id="btnToggleSettings" class="btn btn-outline-primary" title="設定を表示/非表示">設定</button>
   </div>
 
-  <!-- 設定パネル（色はカード白系に準拠） -->
   <div id="settingsPanel" class="card mb-3" style="display:none">
     <div class="card-body">
       <div class="row g-3">
@@ -132,7 +147,6 @@
     </div>
   </div>
 
-  <!-- 入力 -->
   <div class="card mb-3">
     <div class="card-body">
       <label class="form-label">メモ / 指示（音声化・保存対象）</label>
@@ -154,7 +168,6 @@
            href="{% url 'reports:report_create' %}?draft=1&prefill=1" target="_blank">最新下書きで日報へ</a>
       </div>
 
-      <!-- プレビュー -->
       <div class="mt-3">
         <div class="mb-1 text-secondary">プレビュー（送信されるテキスト）</div>
         <div id="vl-preview"></div>
@@ -162,7 +175,6 @@
     </div>
   </div>
 
-  <!-- 再生 -->
   <div class="card mb-3">
     <div class="card-body">
       <label class="form-label">再生</label>
@@ -174,7 +186,6 @@
     </div>
   </div>
 
-  <!-- ローカル下書き -->
   <div class="card mb-3">
     <div class="card-header d-flex justify-content-between align-items-center">
       <span>ローカル下書き</span>
@@ -194,17 +205,15 @@
               <th class="col-ops">操作</th>
             </tr>
           </thead>
-          <tbody><!-- JSで描画 --></tbody>
+          <tbody></tbody>
         </table>
       </div>
     </div>
   </div>
 </div>
 
-<!-- views.py から渡す API トークン -->
 <div id="__cfg" data-token="{{ api_token|default:'devtoken' }}" hidden></div>
 
-<!-- ===== ページ内JS（機能は従来どおり） ===== -->
 <script>
 (() => {
   const cfgEl = document.getElementById("__cfg");
@@ -292,6 +301,7 @@
 
       const tdId = document.createElement("td");
       tdId.className = "col-id";
+      tdId.dataset.label = "ローカルID"; // スマホ表示用のラベル
       tdId.innerHTML = `
         <div class="id-wrap">
           <span class="id-chip" title="${d.id}">${d.id}</span>
@@ -305,6 +315,7 @@
 
       const tdText = document.createElement("td");
       tdText.className = "col-text";
+      tdText.dataset.label = "テキスト"; // スマホ表示用のラベル
       tdText.textContent = d.text;
       tdText.title = d.text;
       tdText.style.cursor = "pointer";
@@ -313,12 +324,14 @@
 
       const tdTs = document.createElement("td");
       tdTs.className = "col-ts";
+      tdTs.dataset.label = "日時（ローカル）"; // スマホ表示用のラベル
       try { tdTs.textContent = fmtJST.format(new Date(d.ts||Date.now())); }
       catch { tdTs.textContent = d.ts || ""; }
       tr.appendChild(tdTs);
 
       const tdOps = document.createElement("td");
       tdOps.className = "col-ops";
+      tdOps.dataset.label = "操作"; // スマホ表示用のラベル
       tdOps.innerHTML = `
         <div class="d-flex gap-2">
           <button class="btn btn-sm btn-outline-primary" data-op="play">▶ 再生</button>
@@ -486,7 +499,7 @@
 
     btn.addEventListener('click', function(){
       var text = getLatestText();
-      if (!text) { alert('下書きが見つかりませんでした。先に「保存（ログに追加）」してください。'); return; }
+      if (!text) { alert('下書きが見つからませんでした。先に「保存（ログに追加）」してください。'); return; }
       try { sessionStorage.setItem('FN_REPORT_PREFILL_TEXT', text); } catch(e){}
       /* href は ?draft=1&prefill=1 を含むため、そのまま遷移（target="_blank"） */
     });
