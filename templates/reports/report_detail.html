@@ -38,7 +38,8 @@
 
   <div class="mt-3 d-flex gap-2">
     <a class="btn btn-outline-primary" href="{% url 'reports:report_update' object.pk %}">編集</a>
-    <a class="btn btn-outline-danger" href="{% url 'reports:report_confirm_delete' object.pk %}">削除</a>
+    <!-- ↓ ここを report_delete に修正 -->
+    <a class="btn btn-outline-danger" href="{% url 'reports:report_delete' object.pk %}">削除</a>
     <a class="btn btn-light" href="{% url 'reports:report_list' %}">一覧へ</a>
   </div>
 </div>

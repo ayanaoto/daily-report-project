@@ -9,37 +9,21 @@
 
   <!-- 検索フォーム -->
   <form method="get" class="row g-3 align-items-end mb-3">
-    <!-- 開始日 -->
     <div class="col-12 col-sm-6 col-md-3">
       <label class="form-label">開始日</label>
-      <input type="date"
-             name="start"
-             value="{{ request.GET.start }}"
-             class="form-control fn-input"
-             placeholder="年 / 月 / 日">
+      <input type="date" name="start" value="{{ request.GET.start }}" class="form-control fn-input" placeholder="年 / 月 / 日">
     </div>
 
-    <!-- 終了日 -->
     <div class="col-12 col-sm-6 col-md-3">
       <label class="form-label">終了日</label>
-      <input type="date"
-             name="end"
-             value="{{ request.GET.end }}"
-             class="form-control fn-input"
-             placeholder="年 / 月 / 日">
+      <input type="date" name="end" value="{{ request.GET.end }}" class="form-control fn-input" placeholder="年 / 月 / 日">
     </div>
 
-    <!-- キーワード -->
     <div class="col-12 col-md-4">
       <label class="form-label">キーワード</label>
-      <input type="text"
-             name="q"
-             value="{{ request.GET.q }}"
-             class="form-control fn-input"
-             placeholder="顧客・件名・本文など">
+      <input type="text" name="q" value="{{ request.GET.q }}" class="form-control fn-input" placeholder="顧客・件名・本文など">
     </div>
 
-    <!-- 並び -->
     <div class="col-6 col-md-2">
       <label class="form-label">並び</label>
       <select name="sort" class="form-select fn-select">
@@ -52,7 +36,6 @@
       </select>
     </div>
 
-    <!-- 件数/頁 -->
     <div class="col-6 col-md-2">
       <label class="form-label">件数/頁</label>
       <select name="per_page" class="form-select fn-select">
@@ -63,20 +46,15 @@
       </select>
     </div>
 
-    <!-- ボタン -->
     <div class="col-12 d-flex fn-actions flex-wrap">
       <button class="btn btn-primary">絞り込み</button>
       <a class="btn btn-outline-secondary" href="{% url 'reports:report_list' %}">リセット</a>
-      <a class="btn btn-outline-info"
-         href="{% url 'reports:report_export_csv' %}?{{ request.GET.urlencode }}">
-        CSV
-      </a>
+      <a class="btn btn-outline-info" href="{% url 'reports:report_export_csv' %}?{{ request.GET.urlencode }}">CSV</a>
       <a class="btn btn-success ms-auto" href="{% url 'reports:report_create' %}">＋ 新規作成</a>
       <a class="btn btn-outline-dark ms-2" href="{% url 'reports:dashboard' %}">📊 ダッシュボードへ</a>
     </div>
   </form>
 
-  <!-- 一覧 -->
   {% if reports %}
     <div class="table-responsive">
       <table class="table table-dark table-striped align-middle">
@@ -111,7 +89,7 @@
                 {% endif %}
               </td>
               <td>
-                {% if r.author %}{{ r.author.username|default:r.author }}{% else %}-{% endif %}
+                {% if r.author %}{{ r.author }}{% else %}-{% endif %}
               </td>
               <td class="text-end">
                 <a class="btn btn-sm btn-outline-light" href="{% url 'reports:report_detail' r.pk %}">詳細</a>
@@ -122,28 +100,21 @@
       </table>
     </div>
 
-    <!-- ページネーション -->
     {% if is_paginated %}
       <nav class="mt-3" aria-label="Page navigation">
         <ul class="pagination">
           {% if page_obj.has_previous %}
-            <li class="page-item">
-              <a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">«</a>
-            </li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">«</a></li>
           {% else %}
             <li class="page-item disabled"><span class="page-link">«</span></li>
           {% endif %}
 
           <li class="page-item disabled">
-            <span class="page-link">
-              {{ page_obj.number }} / {{ page_obj.paginator.num_pages }}
-            </span>
+            <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
           </li>
 
           {% if page_obj.has_next %}
-            <li class="page-item">
-              <a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">»</a>
-            </li>
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">»</a></li>
           {% else %}
             <li class="page-item disabled"><span class="page-link">»</span></li>
           {% endif %}
