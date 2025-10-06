@@ -1,6 +1,3 @@
-
-# daily_report_project/urls.py
-
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
@@ -20,7 +17,7 @@ urlpatterns = [
     path("accounts/logout/", LogoutView.as_view(), name="logout"),
     path("accounts/", include("django.contrib.auth.urls")),
 
-    # ★ サインアップ（テンプレが {% url 'signup' %} を参照しても解決できるように用意）
+    # サインアップ（テンプレが {% url 'signup' %} を参照しても解決できるように）
     path("signup/", report_views.SignUpView.as_view(), name="signup"),
 
     # アプリ本体（/reports/...）
@@ -35,4 +32,3 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-
