@@ -1,12 +1,9 @@
-# daily_report_project/urls.py  （修正版・省略なし）
-
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
-
 from django.contrib.auth.views import LoginView, LogoutView
-from reports import views as report_views  # API用
+from reports import views as report_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -16,10 +13,10 @@ urlpatterns = [
     path("accounts/logout/", LogoutView.as_view(), name="logout"),
     path("accounts/", include("django.contrib.auth.urls")),
 
-    # アプリ本体
-    path("", include(("reports.urls", "reports"), namespace="reports")),
+    # ← ここを 'reports/' で include（/reports/…, /reports/1/ でアクセス可能）
+    path("reports/", include(("reports.urls", "reports"), namespace="reports")),
 
-    # API（reports.views に実装あり）
+    # API
     path("api/voice-logs/", report_views.api_voice_logs, name="api_voice_logs"),
     path("api/tts/", report_views.api_tts, name="api_tts"),
 ]
