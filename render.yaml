@@ -1,0 +1,28 @@
+﻿services:
+  - type: web
+    name: daily-report
+    env: python
+    plan: free
+    region: singapore
+    buildCommand: "pip install -r requirements.txt && python manage.py collectstatic --noinput"
+    startCommand: "gunicorn daily_report_project.wsgi --log-file -"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: DEBUG
+        value: "0"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: daily-report-db
+          property: connectionString
+      - key: AZURE_SPEECH_REGION
+        value: japaneast
+      - key: AZURE_SPEECH_VOICE
+        value: ja-JP-NanamiNeural
+      - key: AZURE_SPEECH_KEY
+        sync: false
+databases:
+  - name: daily-report-db
+    plan: free
