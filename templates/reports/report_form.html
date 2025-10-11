@@ -1,272 +1,30 @@
-{# templates/reports/report_form.html #}
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
-{% block title %}日報の作成 | {{ site_brand|default:"FieldNote" }}{% endblock %}
-
-{% block extra_head %}
-<style>
-  /* —— 黒系→白系へ（構造・項目は変更なし） —— */
-  .page-title { font-size: 2.25rem; font-weight: 800; color:#2f5c74; letter-spacing:.02em; }
-  .form-label { color:#2f3945; }
-  .card { background: #ffffff; border: 1px solid #e6e6e6; }
-  .card-body { padding: 1.75rem; }
-  .form-control, .form-select, textarea {
-    background:#ffffff; border-color:#e6e6e6; color:#111827;
-  }
-  .form-control:focus, .form-select:focus, textarea:focus {
-    background:#ffffff; border-color:#79aec8; box-shadow:0 0 0 .25rem rgba(121,174,200,.25);
-    color:#111827;
-  }
-  .btn-primary { background:#79aec8; border-color:#79aec8; }
-  .btn-outline-light { border-color:#79aec8; color:#417690; }
-  .small-help { color:#6b7280; font-size:.875rem; }
-
-  .preview-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:.75rem; }
-  .preview-item{ position:relative; border:1px solid #e6e6e6; border-radius:.5rem; overflow:hidden; background:#ffffff; }
-  .preview-item img{ width:100%; height:100px; object-fit:cover; display:block; }
-  .preview-item .name{ font-size:.75rem; padding:.25rem .5rem; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-</style>
-{% endblock %}
+{% block title %}日報の作成・編集{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-
-  <h1 class="page-title mb-4">日報の作成</h1>
-
-  <div class="card shadow-sm">
-    <div class="card-body">
-
-      {% if form.non_field_errors %}
-        <div class="alert alert-danger mb-3">
-          {% for e in form.non_field_errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
-        </div>
-      {% endif %}
-
-      <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-
-        <!-- 日付（今回の追加は据え置き） -->
-        <div class="mb-3">
-          <label class="form-label">日付</label>
-          {% if form.date %}
-            {{ form.date }}
-            {% for e in form.date.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          {% elif form.report_date %}
-            {{ form.report_date }}
-            {% for e in form.report_date.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          {% else %}
-            <input type="date" class="form-control" name="date" value="{{ today|default:None|date:'Y-m-d' }}">
-          {% endif %}
-          <div class="small-help">カレンダーから選択できます。</div>
-        </div>
-
-        {% if form.location %}
-          <div class="mb-3">
-            <label class="form-label" for="{{ form.location.id_for_label }}">場所</label>
-            {{ form.location }}
-            {% for e in form.location.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          </div>
-        {% endif %}
-
-        {% if form.progress %}
-          <div class="mb-3">
-            <label class="form-label" for="{{ form.progress.id_for_label }}">進捗</label>
-            {{ form.progress }}
-            {% for e in form.progress.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          </div>
-        {% elif form.status %}
-          <div class="mb-3">
-            <label class="form-label" for="{{ form.status.id_for_label }}">進捗</label>
-            {{ form.status }}
-            {% for e in form.status.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          </div>
-        {% else %}
-          <div class="mb-3">
-            <label class="form-label">進捗</label>
-            <select name="status" class="form-select">
-              <option value="open">未完了</option>
-              <option value="done">完了</option>
-            </select>
-          </div>
-        {% endif %}
-
-        {% if form.content %}
-          <div class="mb-3">
-            <label class="form-label" for="{{ form.content.id_for_label }}">作業内容</label>
-            {{ form.content }}
-            {% for e in form.content.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          </div>
-        {% elif form.body %}
-          <div class="mb-3">
-            <label class="form-label" for="{{ form.body.id_for_label }}">作業内容</label>
-            {{ form.body }}
-            {% for e in form.body.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          </div>
-        {% else %}
-          <div class="mb-3">
-            <label class="form-label">作業内容</label>
-            <textarea name="body" class="form-control" rows="8" placeholder="今日の対応内容・所感など"></textarea>
-          </div>
-        {% endif %}
-
-        {% if form.note %}
-          <div class="mb-3">
-            <label class="form-label" for="{{ form.note.id_for_label }}">備考</label>
-            {{ form.note }}
-            {% for e in form.note.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          </div>
-        {% elif form.remark %}
-          <div class="mb-3">
-            <label class="form-label" for="{{ form.remark.id_for_label }}">備考</label>
-            {{ form.remark }}
-            {% for e in form.remark.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          </div>
-        {% endif %}
-
-        <div class="row g-3">
-          <div class="col-md-6">
-            <label class="form-label">作業時間（時）</label>
-            {% if form.work_hours %}
-              {{ form.work_hours }}
-              {% for e in form.work_hours.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-            {% else %}
-              <input type="number" name="work_hours" class="form-control" min="0" step="1" placeholder="例: 1">
-            {% endif %}
-          </div>
-          <div class="col-md-6">
-            <label class="form-label">作業時間（分）</label>
-            {% if form.work_minutes %}
-              {{ form.work_minutes }}
-              {% for e in form.work_minutes.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-            {% else %}
-              <input type="number" name="work_minutes" class="form-control" min="0" max="59" step="1" placeholder="例: 30">
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="mt-4 mb-2">
-          <label class="form-label">写真アップロード</label>
-
-          {% if form.photos %}
-            {{ form.photos }}
-            {% for e in form.photos.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          {% elif form.images %}
-            {{ form.images }}
-            {% for e in form.images.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          {% elif form.image %}
-            {{ form.image }}
-            {% for e in form.image.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          {% elif form.attachments %}
-            {{ form.attachments }}
-            {% for e in form.attachments.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
-          {% else %}
-            <input id="photoInput" type="file" name="photos" class="form-control" accept="image/*" multiple>
-            <div class="small-help mt-1">画像は複数選択できます（JPG/PNG 等）。</div>
-          {% endif %}
-        </div>
-
-        <div id="photoPreview" class="preview-grid mb-3" aria-live="polite"></div>
-
-        {% for field in form %}
-          {% if field.name not in 'date report_date location progress status content body note remark work_hours work_minutes photos images image attachments' %}
-            <div class="mb-3">
-              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
-              {{ field }}
-              {% if field.help_text %}<div class="small-help mt-1">{{ field.help_text }}</div>{% endif %}
-              {% for e in field.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header">
+                <h1 class="mb-0 h4">{% if object %}日報の編集{% else %}日報の新規作成{% endif %}</h1>
             </div>
-          {% endif %}
-        {% endfor %}
-
-        <div class="mt-4 d-flex gap-2">
-          <button type="submit" class="btn btn-primary">保存</button>
-          <a class="btn btn-outline-light" href="{% url 'reports:report_list' %}">戻る</a>
+            <div class="card-body">
+                {% if form.non_field_errors %}
+                  <div class="alert alert-danger mb-3">
+                    {% for e in form.non_field_errors %}{{ e }}{% endfor %}
+                  </div>
+                {% endif %}
+          
+                <form method="post"> {% csrf_token %}
+                    {{ form.as_p }}
+                    <div class="mt-4 d-flex gap-2">
+                      <button type="submit" class="btn btn-primary">保存</button>
+                      <a class="btn btn-secondary" href="{% if object %}{% url 'reports:report_detail' object.pk %}{% else %}{% url 'reports:report_list' %}{% endif %}">戻る</a>
+                    </div>
+                </form>
+            </div>
         </div>
-      </form>
-
     </div>
-  </div>
-
 </div>
-
-<!-- 画像プレビュー（既存） -->
-<script>
-(function(){
-  function $(sel){ return document.querySelector(sel); }
-  function qq(sel){ return Array.from(document.querySelectorAll(sel)); }
-
-  const fileInputs = qq('input[type="file"][multiple], input[type="file"][name="photos"], input[type="file"][name$="images"], input[type="file"][name$="attachments"], #photoInput');
-  const preview = $("#photoPreview");
-
-  function clearPreview(){ if(preview) preview.innerHTML = ""; }
-  function addPreview(file){
-    if (!preview) return;
-    const url = URL.createObjectURL(file);
-    const wrap = document.createElement('div');
-    wrap.className = 'preview-item';
-    wrap.innerHTML = `
-      <img src="${url}" alt="${file.name}">
-      <div class="name" title="${file.name}">${file.name}</div>
-    `;
-    preview.appendChild(wrap);
-  }
-  function handleChange(ev){
-    clearPreview();
-    const files = ev.target.files || [];
-    Array.from(files).forEach(f => { if(/^image\//.test(f.type)) addPreview(f); });
-  }
-  fileInputs.forEach(inp => inp.addEventListener('change', handleChange));
-})();
-</script>
-
-<!-- ▼▼ 「最新下書きで日報へ」からの自動貼り付け（追加） ▼▼ -->
-<script>
-(function(){
-  // 「?prefill=1」が付いている時だけ実行
-  var sp = new URLSearchParams(location.search);
-  if (sp.get('prefill') !== '1') return;
-
-  // 作業内容／備考のどちらか“最初に見つかった方”へ入れる
-  function pickTarget() {
-    var ids = ['id_body','id_content','id_note','id_remark'];
-    for (var i=0;i<ids.length;i++){
-      var el = document.getElementById(ids[i]);
-      if (el) return el;
-    }
-    // name 属性でも検索
-    var names = ['body','content','note','remark'];
-    for (var j=0;j<names.length;j++){
-      var eln = document.querySelector('[name="'+names[j]+'"]');
-      if (eln) return eln;
-    }
-    return null;
-  }
-
-  var target = pickTarget();
-  if (!target) return;
-
-  // 優先: sessionStorage → 代替: localStorage の最新下書き
-  var text = '';
-  try { text = sessionStorage.getItem('FN_REPORT_PREFILL_TEXT') || ''; } catch(e){}
-  if (!text) {
-    try {
-      var arr = JSON.parse(localStorage.getItem('vl_drafts') || '[]');
-      if (Array.isArray(arr) && arr.length && arr[0].text) {
-        text = String(arr[0].text || '').trim();
-      }
-    } catch(e){}
-  }
-
-  if (text) {
-    target.value = text;
-    // フォームのバリデーション/プレビュー連動向けにイベント発火
-    try {
-      target.dispatchEvent(new Event('input', { bubbles:true }));
-      target.dispatchEvent(new Event('change', { bubbles:true }));
-    } catch(e){}
-  }
-})();
-</script>
-<!-- ▲▲ 追加ここまで ▲▲ -->
-
 {% endblock %}

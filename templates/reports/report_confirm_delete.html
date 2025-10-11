@@ -3,16 +3,24 @@
 {% block title %}日報の削除{% endblock %}
 
 {% block content %}
-    <h1>日報の削除</h1>
-    <hr>
-    <div class="alert alert-danger">
-        <p>本当に「{{ report.customer.company_name }}」に関する日報（{{ report.created_at }}投稿）を削除しますか？</p>
-        <p>この操作は元に戻せません。</p>
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h1 class="mb-0 h4">削除の確認</h1>
+            </div>
+            <div class="card-body">
+                <p>本当にこの日報（{{ object.created_at|date:"Y-m-d" }} @ {{ object.location }}）を削除しますか？</p>
+                <p class="text-danger">この操作は元に戻せません。</p>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2 mt-4">
+                        <button type="submit" class="btn btn-danger">はい、削除します</button>
+                        <a href="{% url 'reports:report_detail' object.pk %}" class="btn btn-secondary">キャンセル</a>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
-
-    <form method="post">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger">はい、削除します</button>
-        <a href="{% url 'report_detail' report.pk %}" class="btn btn-secondary">いいえ、キャンセルします</a>
-    </form>
+</div>
 {% endblock %}

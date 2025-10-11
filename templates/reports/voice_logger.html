@@ -1,481 +1,355 @@
-{# reports/templates/reports/voice_logger.html #}
-{% extends "base.html" %}
-{% load static %}
-{% block title %}Voice Logger{% endblock %}
-
-{% block content %}
-<style>
-  /* =========================
-     Voice Logger – High Contrast (色だけ強化)
-     構造・機能は変更なし
-  ========================== */
-
-  /* 入力欄：白地 + 濃文字 + 2px枠でくっきり */
-  #vl-textarea.form-control{
-    background:#ffffff !important;
-    color:#0b0f14 !important;
-    border:2px solid #334155 !important;
-  }
-  #vl-textarea::placeholder{ color:#4b5563 !important; }
-  #vl-textarea:focus{
-    outline:0;
-    border-color:#0f3f5c !important;
-    box-shadow:0 0 0 .2rem rgba(15,63,92,.2);
-  }
-
-  /* プレビュー：白地 + 濃文字 + 実線2px */
-  #vl-preview{
-    white-space: pre-wrap;
-    background:#ffffff;
-    color:#0b0f14;
-    border:2px solid #334155;
-    border-radius:6px;
-    padding:.6rem .8rem;
-  }
-
-  /* ラベルや見出しの文字を濃色に */
-  h1, .card .form-label, .text-secondary{ color:#0f172a !important; }
-
-  /* 下書きテーブル：コントラストUP */
-  #tblDrafts { table-layout: fixed; }
-  #tblDrafts th, #tblDrafts td { vertical-align: middle; }
-  #tblDrafts thead th  { position:sticky; top:0; background:#2a6078 !important; color:#fff !important; z-index:1; }
-  #tblDrafts tbody td  { border-top:1.5px solid #cbd5e1 !important; }
-  #tblDrafts tbody tr:hover { background:#f2f8fc !important; }
-
-  #tblDrafts .col-id   { width: 220px; background:#f8fbfd; border-right:1px solid #e6e6e6; }
-  #tblDrafts .col-ts   { width: 180px; white-space: nowrap; }
-  #tblDrafts .col-ops  { width: 240px; white-space: nowrap; }
-  #tblDrafts .col-text { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#0b0f14; }
-
-  /* ローカルIDの見やすさ */
-  .id-wrap { display:flex; align-items:center; gap:.5rem; }
-  .id-chip {
-    flex:1 1 auto; min-width:0;
-    font: 600 .92rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    color:#0b0f14; background:#eef6fb; border:2px solid #9ec9df;
-    border-radius:9px; padding:6px 8px;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  }
-  .id-copy {
-    flex:0 0 auto; padding:3px 6px; font-size:.8rem;
-    border:2px solid #9ec9df; background:#ffffff; color:#0b0f14; border-radius:7px;
-    cursor:pointer;
-  }
-  .id-copy:hover { background:#f3f9fc; }
-
-  /* スマホ表示の修正 */
-  @media (max-width: 900px) {
-    #tblDrafts thead { display: none; } /* スマホではヘッダーを非表示 */
-    #tblDrafts tr, #tblDrafts td { display: block; width: 100% !important; border:0 !important; }
-    #tblDrafts tr { border-top: 2px solid #2a6078; padding-bottom: 1rem; }
-    #tblDrafts td { padding: .4rem .2rem !important; }
-    #tblDrafts .col-id { background: transparent; }
-    #tblDrafts .col-ts, #tblDrafts .col-ops { white-space: normal; }
-
-    .id-wrap { flex-direction: column; align-items: stretch; gap:.4rem; }
-    .id-copy { width:100%; text-align:center; }
-
-    /* 各セルの前にラベルを追加して分かりやすくする */
-    #tblDrafts td:before {
-      content: attr(data-label);
-      font-weight: bold;
-      display: block;
-      margin-bottom: .2rem;
-      color: #2a6078;
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>Voice Logger</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    :root{
+      --fn-page-bg:#f8f9fa; --fn-text:#212529; --fn-header:#417690; --fn-accent:#79aec8;
+      --fn-accent-2:#2a6078; --fn-accent-h:#195c77; --fn-input-bg:#fff; --fn-input-tx:#0b0f14;
+      --fn-input-bd:#334155; --fn-input-ph:#6b7280; --fn-link:#1f4d66; --fn-link-h:#14394d;
     }
-  }
-
-  /* 簡易モーダル（白基調） */
-  .vl-modal-mask { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; z-index:1050; }
-  .vl-modal {
-    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-    width:min(900px, 90vw); max-height:80vh; background:#ffffff; color:#0b0f14;
-    border:1px solid #e6e6e6; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,.15);
-    display:flex; flex-direction:column;
-  }
-  .vl-modal header, .vl-modal footer { padding:.5rem .75rem; }
-  .vl-modal header { display:flex; justify-content:space-between; border-bottom:1px solid #e6e6e6; }
-  .vl-modal footer { border-top:1px solid #e6e6e6; text-align:right; }
-  .vl-modal main { padding:.75rem; overflow:auto; }
-  .vl-modal pre { margin:0; background:#f7fafc; color:#0b0f14; border:1px solid #e5edf4; border-radius:6px; padding:.75rem; white-space:pre-wrap; word-break:break-word; }
-
-  /* ボタン：色味は維持しつつコントラストUP */
-  .btn-primary{ background:#1f6f90 !important; border-color:#1f6f90 !important; }
-  .btn-primary:hover{ background:#195c77 !important; border-color:#195c77 !important; }
-  .btn-success{ background:#2b6e3f !important; border-color:#2b6e3f !important; }
-  .btn-success:hover{ background:#225a33 !important; border-color:#225a33 !important; }
-  .btn-outline-secondary{ color:#0f172a !important; border-color:#334155 !important; }
-  .btn-outline-secondary:hover{ background:#e6f2f7 !important; color:#0b0f14 !important; }
-</style>
-
-<div class="container" style="max-width:980px">
-  <div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="mb-0">NeoInfinity Voice Logger</h1>
-    </div>
-
-  <div class="card mb-3">
-    <div class="card-body">
-      <label class="form-label">メモ / 指示（音声化・保存対象）</label>
-      <textarea id="vl-textarea" class="form-control" rows="4"
-        placeholder="例）A社 10/3 15:00 訪問の件、資料は最新版v3で。"></textarea>
-
-      <div class="d-flex align-items-center justify-content-between mt-2">
-        <small class="text-secondary"><span id="charCount">0</span> 文字</small>
-        <small class="text-secondary">クリック= TTS（文字→音） / 長押し= STT（音声→文字）</small>
-      </div>
-
-      <div class="mt-3 d-flex flex-wrap gap-2">
-        <button id="btnSpeak" class="btn btn-primary">話す（TTS / 長押しでSTT）</button>
-        <button id="btnSave"  class="btn btn-success">保存（ログに追加）</button>
-        <button id="btnClear" class="btn btn-outline-secondary">クリア</button>
-
-        {# ★ ここだけ確実動作のために固定クエリ付与 #}
-        <a id="btnToReport" class="btn btn-outline-secondary"
-           href="{% url 'reports:report_create' %}?draft=1&prefill=1" target="_blank">最新下書きで日報へ</a>
-      </div>
-
-      <div class="mt-3">
-        <div class="mb-1 text-secondary">プレビュー（送信されるテキスト）</div>
-        <div id="vl-preview"></div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card mb-3">
-    <div class="card-body">
-      <label class="form-label">再生</label>
-      <audio id="player" controls preload="none" style="width:100%"></audio>
-      <div id="dlLinkWrap" class="mt-2" style="display:none">
-        <a id="dlLink" download="tts.mp3" class="btn btn-sm btn-outline-secondary">音声をダウンロード</a>
-        <small class="text-secondary ms-2">（自動再生できない環境向け）</small>
-      </div>
-    </div>
-  </div>
-
-  <div class="card mb-3">
-    <div class="card-header d-flex justify-content-between align-items-center">
-      <span>ローカル下書き</span>
-      <div class="d-flex gap-2">
-        <button id="btnSync"  class="btn btn-sm btn-outline-secondary">未送信の同期</button>
-        <button id="btnPurge" class="btn btn-sm btn-outline-danger">全削除</button>
-      </div>
-    </div>
-    <div class="card-body p-0">
-      <div class="table-responsive">
-        <table class="table table-striped mb-0" id="tblDrafts">
-          <thead>
-            <tr>
-              <th class="col-id">ローカルID</th>
-              <th class="col-text">テキスト</th>
-              <th class="col-ts">日時（ローカル）</th>
-              <th class="col-ops">操作</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </div>
-</div>
-
-<div id="__cfg" data-token="{{ api_token|default:'devtoken' }}" hidden></div>
-
-<script>
-(() => {
-  const cfgEl = document.getElementById("__cfg");
-  const API_TOKEN = cfgEl?.dataset?.token || "devtoken";
-  const API_URL   = "/api/voice-logs/";
-
-  const elText   = document.getElementById("vl-textarea");
-  const elPrev   = document.getElementById("vl-preview");
-  const elCount  = document.getElementById("charCount");
-  const btnSave  = document.getElementById("btnSave");
-  const btnClear = document.getElementById("btnClear");
-  const btnTTS   = document.getElementById("btnSpeak");
-  const tbody    = document.querySelector("#tblDrafts tbody");
-  const btnSync  = document.getElementById("btnSync");
-  const btnPurge = document.getElementById("btnPurge");
-  const player   = document.getElementById("player");
-  const dlWrap   = document.getElementById("dlLinkWrap");
-  const dlLink   = document.getElementById("dlLink");
-  // 「設定」関連のJavaScript変数を削除しました
-
-  const alertMsg = (m) => window.alert(m);
-  const genLocalId = () => `L${Date.now()}${Math.random().toString(36).slice(2,8)}`;
-  const genIdem    = () => `ui-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  const fmtJST = new Intl.DateTimeFormat("ja-JP", { dateStyle:"medium", timeStyle:"medium", timeZone:"Asia/Tokyo" });
-
-  const LS_DRAFTS = "vl_drafts";
-  function loadDrafts(){ try { return JSON.parse(localStorage.getItem(LS_DRAFTS) || "[]"); } catch { return []; } }
-  function saveDrafts(arr){ localStorage.setItem(LS_DRAFTS, JSON.stringify(arr)); }
-
-  function renderPreview(){
-    const v = elText.value || "";
-    if (elPrev)  elPrev.textContent = v;
-    if (elCount) elCount.textContent = String(v.length);
-  }
-  elText.addEventListener("input", renderPreview);
-  renderPreview();
-
-  function enableSyncButtons(){
-    const arr = loadDrafts();
-    btnSync.disabled  = !arr.some(d => !d.sent);
-    btnPurge.disabled = arr.length === 0;
-  }
-
-  // モーダル（全文表示）
-  function showModal(title, bodyText){
-    const mask = document.createElement("div");
-    mask.className = "vl-modal-mask";
-    mask.innerHTML = `
-      <div class="vl-modal" role="dialog" aria-modal="true">
-        <header>
-          <strong>${title}</strong>
-          <button class="btn btn-sm btn-outline-secondary" data-close>閉じる</button>
-        </header>
-        <main><pre></pre></main>
-        <footer>
-          <button class="btn btn-sm btn-outline-secondary" data-copy>コピー</button>
-          <button class="btn btn-sm btn-primary" data-close>OK</button>
-        </footer>
-      </div>`;
-    document.body.appendChild(mask);
-    mask.style.display = "block";
-    mask.querySelector("pre").textContent = bodyText || "";
-
-    function close(){ mask.remove(); }
-    mask.addEventListener("click", (e)=>{ if(e.target === mask) close(); });
-    mask.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", close));
-    mask.querySelector("[data-copy]").addEventListener("click", async ()=>{
-      try { await navigator.clipboard.writeText(bodyText || ""); alertMsg("コピーしました"); } catch {}
-    });
-  }
-
-  function renderTable(){
-    const drafts = loadDrafts();
-    enableSyncButtons();
-    tbody.innerHTML = "";
-    if (drafts.length === 0) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 4; td.className = "text-center text-secondary"; td.textContent = "下書きはありません。";
-      tr.appendChild(td); tbody.appendChild(tr); return;
+    body{ background:var(--fn-page-bg); color:var(--fn-text); }
+    a{ color:var(--fn-link); text-decoration:none; } a:hover{ color:var(--fn-link-h); }
+    .navbar{ background:var(--fn-header)!important; } .navbar .navbar-brand,.navbar .nav-link{ color:#eef7fb!important; }
+    .navbar .nav-link:hover{ color:#fff!important; }
+    .card{ background:#fff; border:1px solid #dee2e6; }
+    .form-control{ background:#fff!important; color:#0b0f14!important; border:2px solid #334155!important; }
+    .form-control:focus{ border-color:#0f3f5c!important; box-shadow:0 0 0 .2rem rgba(15,63,92,.2); }
+    .btn-primary{ background:#2a6078!important; border-color:#2a6078!important; }
+    .btn-primary:hover{ background:#195c77!important; border-color:#195c77!important; }
+    .btn-success{ background:#2b6e3f!important; border-color:#2b6e3f!important; }
+    .btn-success:hover{ background:#225a33!important; border-color:#225a33!important; }
+    #tblDrafts{ table-layout:fixed; } #tblDrafts th,#tblDrafts td{ vertical-align:middle; }
+    #tblDrafts thead th{ position:sticky; top:0; background:#2a6078!important; color:#fff!important; z-index:1; }
+    #tblDrafts .col-id{ width:220px; } #tblDrafts .col-ts{ width:180px; white-space:nowrap; }
+    #tblDrafts .col-ops{ width:180px; white-space:nowrap; } #tblDrafts .col-text{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    @media (max-width:768px){ #tblDrafts thead{ display:none; } #tblDrafts tr,#tblDrafts td{ display:block; width:100%!important; border:0!important; }
+      #tblDrafts tr{ border-top:2px solid #2a6078; padding:.5rem 0; margin-bottom:1rem; }
+      #tblDrafts .col-text,#tblDrafts .col-ts{ display:none; }
     }
-    drafts.forEach(d => {
-      const tr = document.createElement("tr");
-
-      const tdId = document.createElement("td");
-      tdId.className = "col-id";
-      tdId.dataset.label = "ローカルID"; // スマホ表示用のラベル
-      tdId.innerHTML = `
-        <div class="id-wrap">
-          <span class="id-chip" title="${d.id}">${d.id}</span>
-          <button class="id-copy" type="button">コピー</button>
+    #btnSpeak.rec{ position:relative; }
+    #btnSpeak.rec::after{ content:""; position:absolute; top:-6px; right:-6px; width:12px; height:12px; border-radius:9999px; background:#dc3545; box-shadow:0 0 0 6px rgba(220,53,69,.25); }
+    /* 詳細モーダル */
+    .vl-modal-backdrop{ position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:1050; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .vl-modal{ width:min(960px,96vw); max-height:min(80vh,900px); display:flex; flex-direction:column; background:#fff; color:#111827; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,.35); overflow:hidden; }
+    .vl-modal-header{ display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid #e5e7eb; background:#f8fafc; color:#0f172a; font-weight:600; }
+    .vl-modal-title{ margin:0; font-size:16px; }
+    .vl-btn-close{ appearance:none; border:0; background:transparent; cursor:pointer; width:28px; height:28px; border-radius:6px; color:#334155; }
+    .vl-btn-close:hover{ background:#e2e8f0; }
+    .vl-modal-body{ padding:16px; overflow:auto; }
+    .vl-modal-body pre{ margin:0; white-space:pre-wrap; word-break:break-word; font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:14px; line-height:1.6; color:#111827; }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container">
+      <a class="navbar-brand fw-bold" href="/reports/">FieldNote</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav"><span class="navbar-toggler-icon"></span></button>
+      <div class="collapse navbar-collapse" id="mainNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="/reports/">日報一覧</a></li>
+          <li class="nav-item"><a class="nav-link" href="/reports/customers/">顧客</a></li>
+          <li class="nav-item"><a class="nav-link" href="/reports/deals/">案件</a></li>
+          <li class="nav-item"><a class="nav-link" href="/reports/troubleshooting/">トラブルシュート</a></li>
+          <li class="nav-item"><a class="nav-link" href="/reports/todo/">ToDo</a></li>
+          <li class="nav-item"><a class="nav-link" href="/reports/voice-logger/">音声ログ</a></li>
+        </ul>
+        <div class="d-flex align-items-center gap-2">
+          <a class="btn btn-success" href="/reports/create/">＋日報</a>
+          <div class="dropdown">
+            <button class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown">pc</button>
+            <ul class="dropdown-menu dropdown-menu-end">
+              <li><a class="dropdown-item" href="/reports/profile/">プロフィール</a></li>
+              <li><a class="dropdown-item" href="/admin/">管理サイト</a></li>
+              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <form action="/accounts/logout/" method="post" class="px-2 py-1">
+                  <button type="submit" class="btn btn-sm btn-outline-danger w-100">ログアウト</button>
+                </form>
+              </li>
+            </ul>
+          </div>
         </div>
-      `;
-      tdId.querySelector(".id-copy").addEventListener("click", async () => {
-        try { await navigator.clipboard.writeText(d.id); } catch {}
-      });
-      tr.appendChild(tdId);
+      </div>
+    </div>
+  </nav>
 
-      const tdText = document.createElement("td");
-      tdText.className = "col-text";
-      tdText.dataset.label = "テキスト"; // スマホ表示用のラベル
-      tdText.textContent = d.text;
-      tdText.title = d.text;
-      tdText.style.cursor = "pointer";
-      tdText.addEventListener("click", ()=> showModal("テキスト全文", d.text));
-      tr.appendChild(tdText);
+  <main class="container py-4">
+    <div class="container" style="max-width:980px">
+      <div class="d-flex align-items-center justify-content-between mb-3">
+        <h1 class="mb-0">Voice Logger</h1>
+        <span class="badge text-bg-light" id="netStatus">ONLINE</span>
+      </div>
 
-      const tdTs = document.createElement("td");
-      tdTs.className = "col-ts";
-      tdTs.dataset.label = "日時（ローカル）"; // スマホ表示用のラベル
-      try { tdTs.textContent = fmtJST.format(new Date(d.ts||Date.now())); }
-      catch { tdTs.textContent = d.ts || ""; }
-      tr.appendChild(tdTs);
+      <div class="card mb-3">
+        <div class="card-body">
+          <label class="form-label" for="vl-textarea">メモ / 指示</label>
+        <textarea id="vl-textarea" class="form-control" rows="4" placeholder="例）A社 10/3 15:00 訪問の件、資料は最新版v3で。"></textarea>
+          <div class="d-flex align-items-center justify-content-between mt-2">
+            <small class="text-secondary"><span id="charCount">0</span> 文字</small>
+            <small class="text-secondary">長押し＝文字起こし（STT）</small>
+          </div>
+          <div class="mt-3 d-flex flex-wrap gap-2">
+            <button id="btnSpeak" class="btn btn-primary">長押しでSTT（文字起こし）</button>
+            <button id="btnSave" class="btn btn-success">保存（ログに追加）</button>
+            <button id="btnClear" class="btn btn-outline-secondary">クリア</button>
+          </div>
+          <div class="mt-2 text-muted small">
+            ※ 日報には各自でコピー＆ペーストしてください。
+          </div>
+        </div>
+      </div>
 
-      const tdOps = document.createElement("td");
-      tdOps.className = "col-ops";
-      tdOps.dataset.label = "操作"; // スマホ表示用のラベル
-      tdOps.innerHTML = `
-        <div class="d-flex gap-2">
-          <button class="btn btn-sm btn-outline-primary" data-op="play">▶ 再生</button>
-          <button class="btn btn-sm btn-outline-success" data-op="send">${d.sent ? "送信済" : (d.sending ? "送信中..." : "送信")}</button>
-          <button class="btn btn-sm btn-outline-danger" data-op="del">削除</button>
-        </div>`;
-      const playBtn = tdOps.querySelector('[data-op="play"]');
-      const sendBtn = tdOps.querySelector('[data-op="send"]');
-      const delBtn  = tdOps.querySelector('[data-op="del"]');
-      sendBtn.disabled = !!d.sent || !!d.sending;
+      <div class="card mb-3">
+        <div class="card-body">
+          <label class="form-label">再生</label>
+          <audio id="player" controls preload="none" style="width:100%"></audio>
+        </div>
+      </div>
 
-      playBtn.addEventListener("click", ()=> playTextTTS(d.text).catch(e=>{
-        console.error(e); alertMsg("再生に失敗: " + (e?.message ?? "unknown"));
-      }));
-      sendBtn.addEventListener("click", ()=> syncOne(d.id));
-      delBtn.addEventListener("click", ()=> removeOne(d.id));
-      tr.appendChild(tdOps);
+      <div class="card mb-3">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <span>ローカル下書き</span>
+          <div class="d-flex flex-wrap gap-2">
+            <button id="btnSync" class="btn btn-sm btn-outline-secondary">未送信を同期</button>
+            <button id="btnPurge" class="btn btn-sm btn-outline-danger">全削除</button>
+          </div>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-striped mb-0" id="tblDrafts">
+            <thead>
+              <tr>
+                <th class="col-id">ローカルID</th>
+                <th class="col-text">テキスト</th>
+                <th class="col-ts">日時</th>
+                <th class="col-ops">操作</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
 
-      tbody.appendChild(tr);
-    });
-  }
+    <!-- （必要なら）サーバで data-token を埋める。開発は devtoken -->
+    <div id="__cfg" data-token="devtoken" hidden></div>
 
-  function addLocalDraft(text){
-    const arr = loadDrafts();
-    arr.unshift({ id: genLocalId(), text, ts: Date.now(), sending:false, sent:false });
-    saveDrafts(arr); renderTable();
-  }
-  function markSending(id, sending){
-    const arr = loadDrafts(); const d = arr.find(x=>x.id===id);
-    if (d){ d.sending = sending; saveDrafts(arr); renderTable(); }
-  }
-  function markSent(id){
-    const arr = loadDrafts(); const d = arr.find(x=>x.id===id);
-    if (d){ d.sent = true; d.sending = false; saveDrafts(arr); renderTable(); }
-  }
-  function removeOne(id){
-    saveDrafts(loadDrafts().filter(x=>x.id!==id)); renderTable();
-  }
+    <script>
+      (() => {
+        "use strict";
 
-  async function postToServer(text, idemKey){
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${API_TOKEN}`,
-        "Content-Type": "application/json; charset=utf-8",
-        "Idempotency-Key": idemKey || genIdem(),
-      },
-      body: JSON.stringify({ text, intent: "note" }),
-    });
-    const data = await res.json().catch(()=> ({}));
-    if (!res.ok || !data?.ok) throw new Error(data?.error || `${res.status} ${res.statusText}`);
-    return data.id;
-  }
-  async function syncOne(localId){
-    const arr = loadDrafts(); const item = arr.find(d=>d.id===localId);
-    if (!item || item.sent) return;
-    try { markSending(localId,true); await postToServer(item.text); markSent(localId); }
-    catch(e){ console.error(e); markSending(localId,false); alertMsg("同期に失敗: "+(e?.message??"unknown")); }
-  }
-  async function syncAll(){
-    const arr = loadDrafts().filter(d=>!d.sent);
-    if (arr.length===0){ alertMsg("未送信はありません"); return; }
-    for (const d of arr) { await syncOne(d.id); }
-  }
+        const alertMsg = (m) => window.alert(m);
+        const fmtJST = new Intl.DateTimeFormat("ja-JP",{dateStyle:"medium",timeStyle:"medium",timeZone:"Asia/Tokyo"});
+        const LS_DRAFTS="vl_drafts";
 
-  async function onSaveClicked(){
-    const text = (elText.value || "").trim();
-    if (!text){ alertMsg("テキストが空です"); elText.focus(); return; }
-    addLocalDraft(text); elText.value=""; renderPreview();
-    try { await syncAll(); } catch {}
-  }
+        const cfgEl = document.getElementById("__cfg");
+        const qs = new URLSearchParams(location.search);
+        const tokenFromQS  = qs.get("token");
+        const tokenFromLS  = localStorage.getItem("FN_API_TOKEN");
+        const tokenFromDOM = cfgEl?.dataset?.token;
+        const API_TOKEN = (tokenFromQS || tokenFromLS || tokenFromDOM || "").trim();
+        if (tokenFromQS) localStorage.setItem("FN_API_TOKEN", tokenFromQS);
 
-  async function playTextTTS(text) {
-    const voice  = "ja-JP-NanamiNeural";
-    const style  = "chat";
-    const degree = 1.1;
-    const rate   = "-6%";
-    const pitch  = "+1%";
-    const format = "audio-24khz-48kbitrate-mono-mp3";
+        const API_URL_VOICELOG = "/api/voice-logs/";
+        const API_URL_TTS      = "/api/tts/";
 
-    const res = await fetch("/api/tts/", {
-      method: "POST",
-      headers: { "Content-Type": "application/json; charset=utf-8" },
-      body: JSON.stringify({ text, voice, style, styledegree: degree, rate, pitch, format }),
-    });
-    if (!res.ok) {
-      const t = await res.text().catch(()=> "");
-      throw new Error(`${res.status} ${res.statusText}: ${t}`);
-    }
-    const blob = await res.blob();
-    const url  = URL.createObjectURL(blob);
+        const elText   = document.getElementById("vl-textarea");
+        const elCount  = document.getElementById("charCount");
+        const btnSave  = document.getElementById("btnSave");
+        const btnClear = document.getElementById("btnClear");
+        const btnTTS   = document.getElementById("btnSpeak");
+        const tbody    = document.querySelector("#tblDrafts tbody");
+        const btnSync  = document.getElementById("btnSync");
+        const btnPurge = document.getElementById("btnPurge");
+        const player   = document.getElementById("player");
+        const netStatus= document.getElementById("netStatus");
 
-    dlWrap.style.display = "block";
-    dlLink.href = url;
-    dlLink.download = "tts.mp3";
+        const MAX_TEXT_LEN=4000, MAX_KEEP=500;
+        function isOnline(){ return navigator.onLine; }
+        function updateNetBadge(){
+          netStatus.textContent = isOnline() ? "ONLINE" : "OFFLINE";
+          netStatus.className = `badge ${isOnline() ? "text-bg-success" : "text-bg-secondary"}`;
+        }
+        addEventListener("online",updateNetBadge);
+        addEventListener("offline",updateNetBadge);
+        updateNetBadge();
 
-    player.src = url;
-    try { await player.play(); } catch {}
-  }
+        function genLocalId(){ return `L${Date.now()}${Math.random().toString(36).slice(2,8)}`; }
+        function loadDrafts(){ try{const raw=localStorage.getItem(LS_DRAFTS); const arr=raw?JSON.parse(raw):[]; return Array.isArray(arr)?arr:[]}catch{return[];} }
+        function saveDrafts(arr){ localStorage.setItem(LS_DRAFTS, JSON.stringify(arr.slice(0,MAX_KEEP))); }
+        function renderCharCount(){ const len=(elText.value||"").length; if(len>MAX_TEXT_LEN) elText.value=elText.value.slice(0,MAX_TEXT_LEN); elCount.textContent=String((elText.value||"").length); }
+        elText.addEventListener("input",renderCharCount); renderCharCount();
 
-  async function doTTS(){
-    const text = (elText.value || "").trim();
-    if (!text){ alertMsg("テキストが空です"); elText.focus(); return; }
-    await playTextTTS(text);
-  }
+        function showDetailsModal(text) {
+          const backdrop = document.createElement('div'); backdrop.className = 'vl-modal-backdrop'; backdrop.tabIndex = -1;
+          const modal = document.createElement('div');
+          modal.className = 'vl-modal'; modal.setAttribute('role','dialog'); modal.setAttribute('aria-modal','true');
+          modal.innerHTML = `
+            <div class="vl-modal-header">
+              <h5 class="vl-modal-title">下書き詳細</h5>
+              <button class="vl-btn-close" aria-label="閉じる">✕</button>
+            </div>
+            <div class="vl-modal-body"><pre></pre></div>`;
+          modal.querySelector('pre').textContent = text || "";
+          const close = () => { document.removeEventListener('keydown', onKey); backdrop.remove(); document.body.style.overflow=''; };
+          const onKey = (e) => { if (e.key === 'Escape') close(); };
+          modal.querySelector('.vl-btn-close').addEventListener('click', close);
+          backdrop.addEventListener('click', e => { if (e.target === backdrop) close(); });
+          document.addEventListener('keydown', onKey);
+          backdrop.appendChild(modal); document.body.appendChild(backdrop); document.body.style.overflow='hidden';
+        }
 
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  let rec = null, sttCommitted="", sttInterim="";
-  function updateFromSTT(){
-    elText.value = (sttCommitted + (sttInterim ? " " + sttInterim : "")).trim();
-    renderPreview();
-  }
-  if (SpeechRecognition){
-    rec = new SpeechRecognition();
-    rec.lang="ja-JP"; rec.interimResults=true; rec.continuous=false; rec.maxAlternatives=1;
-    rec.onstart = ()=>{ sttCommitted=(elText.value||"").trim(); sttInterim=""; };
-    rec.onresult = (e)=> {
-      for (let i=e.resultIndex;i<e.results.length;i++){
-        const r = e.results[i];
-        if (r.isFinal){ sttCommitted=(sttCommitted+" "+r[0].transcript).trim(); sttInterim=""; }
-        else { sttInterim=r[0].transcript; }
-      }
-      updateFromSTT();
-    };
-    rec.onerror = ()=>{ sttInterim=""; elText.value=sttCommitted; renderPreview(); };
-    rec.onend   = ()=>{ sttInterim=""; elText.value=sttCommitted; renderPreview(); };
-  }
+        function renderTable(){
+          const drafts=loadDrafts(); tbody.innerHTML="";
+          if(drafts.length===0){
+            tbody.innerHTML='<tr><td colspan="4" class="text-center text-muted">下書きはありません。</td></tr>';
+            return;
+          }
+          for(const d of drafts){
+            const tr=document.createElement("tr");
+            tr.innerHTML=`
+              <td class="col-id">${d.id}</td>
+              <td class="col-text"></td>
+              <td class="col-ts">${fmtJST.format(new Date(d.ts))}</td>
+              <td class="col-ops">
+                <div class="d-flex flex-wrap gap-2">
+                  <button class="btn btn-sm btn-outline-info btn-details">詳細</button>
+                  <button class="btn btn-sm btn-outline-danger btn-del">削除</button>
+                </div>
+              </td>`;
+            tr.querySelector(".col-text").textContent=d.text;
+            tr.querySelector(".btn-details").addEventListener("click",()=>showDetailsModal(d.text));
+            tr.querySelector(".btn-del").addEventListener("click",()=>removeOne(d.id));
+            tbody.appendChild(tr);
+          }
+        }
 
-  // 「設定」ボタンのイベントリスナーを削除しました
-  btnClear.addEventListener("click", ()=>{ elText.value=""; renderPreview(); elText.focus(); });
-  btnSave .addEventListener("click", ()=> onSaveClicked().catch(e=>{console.error(e); alertMsg("保存失敗: "+(e?.message??"unknown"));}));
-  btnSync .addEventListener("click", ()=> syncAll().catch(e=>{console.error(e); alertMsg("同期失敗: "+(e?.message??"unknown"));}));
-  btnPurge.addEventListener("click", ()=>{
-    if (confirm("ローカル下書きを全て削除します。よろしいですか？")){ localStorage.setItem(LS_DRAFTS,"[]"); renderTable(); }
-  });
+        function addLocalDraft(text){
+          const arr=loadDrafts();
+          arr.unshift({id:genLocalId(), text, ts:Date.now(), sent:false});
+          saveDrafts(arr); renderTable();
+        }
+        function removeOne(id){
+          if(!confirm("この下書きを削除しますか？")) return;
+          saveDrafts(loadDrafts().filter(x=>x.id!==id)); renderTable();
+        }
 
-  if (btnTTS){
-    let timer=null, longPressed=false;
-    const down=()=>{ longPressed=false; timer=setTimeout(()=>{ longPressed=true; if(!rec){alertMsg("このブラウザは音声入力に対応していません（Chrome推奨）"); return;} try{rec.start();}catch{} },600); };
-    const up  =()=>{ clearTimeout(timer); if(longPressed){ try{rec && rec.stop && rec.stop();}catch{} } else { doTTS().catch(e=>{console.error(e); alertMsg("TTS失敗: "+(e?.message??"unknown"));}); } };
-    btnTTS.addEventListener("mousedown",down);
-    btnTTS.addEventListener("mouseup",up);
-    btnTTS.addEventListener("mouseleave",up);
-    btnTTS.addEventListener("touchstart",down);
-    btnTTS.addEventListener("touchend",up);
-    btnTTS.addEventListener("touchcancel",up);
-    
-    // スマホでの長押し時に、ブラウザのデフォルトメニューが表示されるのを防ぐ
-    btnTTS.addEventListener("contextmenu", (e) => e.preventDefault());
-  }
+        // サーバ同期（必要な人だけ使えるよう残しています）
+        async function postToServer(text){
+          if(!API_TOKEN){ alertMsg("APIトークン未設定のため同期できません。"); throw new Error("no-token"); }
+          const headers={
+            "Authorization": `Bearer ${API_TOKEN}`,
+            "Content-Type": "application/json; charset=utf-8",
+            "Accept": "application/json"
+          };
+          const body=JSON.stringify({text, intent:"note"});
+          const res=await fetch(API_URL_VOICELOG,{method:"POST", headers, body});
+          if(!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          return (await res.json()).id;
+        }
+        async function syncAllPending(){
+          if(!isOnline()){ alertMsg("現在オフラインです。オンライン復帰後に再実行してください。"); return; }
+          const arr=loadDrafts(); let changed=false;
+          for(const d of arr.filter(x=>!x.sent)){
+            try{ await postToServer(d.text); d.sent=true; changed=true; }catch(e){ console.warn("同期失敗:",e); }
+          }
+          if(changed){ saveDrafts(arr); renderTable(); }
+        }
 
-  renderTable();
+        // TTS（保存時に再生できる音声を生成・セット）
+        let currentObjectUrl=null;
+        async function prepareTTS(text){
+          text=(text||"").trim(); if(!text) return;
+          try{
+            const res = await fetch(API_URL_TTS,{
+              method:"POST",
+              headers:{
+                "Authorization": API_TOKEN ? `Bearer ${API_TOKEN}` : "",
+                "Content-Type":"application/json; charset=utf-8",
+                "Accept":"audio/mpeg, audio/*;q=0.9, application/json;q=0.1"
+              },
+              body: JSON.stringify({ text })
+            });
+            const ctype=(res.headers.get("content-type")||"").toLowerCase();
+            if(!res.ok || ctype.includes("application/json")) return;
+            const blob=await res.blob(); if(!blob || blob.size===0) return;
+            if(currentObjectUrl){ URL.revokeObjectURL(currentObjectUrl); currentObjectUrl=null; }
+            currentObjectUrl=URL.createObjectURL(blob);
+            player.pause(); player.src=currentObjectUrl; player.setAttribute("type","audio/mpeg"); player.load();
+          }catch(e){ console.warn("TTSエラー:",e); }
+        }
 
-  /* ▼ クリック時に sessionStorage にも入れておく（左クリック遷移でも即貼り付け可） */
-  (function(){
-    var btn = document.getElementById('btnToReport');
-    if (!btn) return;
+        async function onSaveClicked(){
+          const text=(elText.value||"").trim(); if(!text){ alertMsg("テキストが空です"); return; }
+          await prepareTTS(text);
+          addLocalDraft(text); elText.value=""; renderCharCount();
+        }
 
-    function getLatestText(){
-      var ta = document.getElementById('vl-textarea');
-      if (ta && ta.value && ta.value.trim()) return ta.value.trim();
-      try {
-        var arr = JSON.parse(localStorage.getItem('vl_drafts') || '[]');
-        if (Array.isArray(arr) && arr.length && arr[0].text) return String(arr[0].text).trim();
-      } catch(e){}
-      var td = document.querySelector('#tblDrafts tbody tr td.col-text');
-      if (td && td.textContent) return td.textContent.trim();
-      return '';
-    }
+        // STT（長押し）
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let rec=null, isRecording=false, longPressed=false, pressTimer=null;
+        function ensureSTT(){
+          if(!SpeechRecognition){ alertMsg("このブラウザは音声入力に対応していません（Chrome 推奨）。"); return false; }
+          if(!rec){
+            rec = new SpeechRecognition();
+            rec.lang="ja-JP"; rec.continuous=true; rec.interimResults=true; rec.maxAlternatives=1;
+            const normalizeJa = (s)=>(s||"").replace(/\s+/g," ").replace(/(、){2,}/g,"、").replace(/(。){2,}/g,"。").trim();
+            const smartAppend = (a,b)=>{ a=a||""; b=b||""; if(!b) return a; if(a.endsWith(b)) return a; const win=a.slice(-60); if(b.length>=6 && win.includes(b)) return a; const max=Math.min(50,a.length,b.length); for(let k=max;k>0;k--){ if(a.slice(-k)===b.slice(0,k)) return a+b.slice(k); } return a+b; };
+            let lastFinalPiece=""; const almostSame=(x,y)=>{ if(!x||!y) return false; const n=Math.min(x.length,y.length); if(n<6) return false; let same=0; for(let i=0;i<n;i++) if(x[i]===y[i]) same++; return same/Math.max(x.length,y.length)>=0.8; };
+            let finalBuf=""; let interimBuf="";
+            rec.onstart=()=>{ finalBuf=elText.value||""; interimBuf=""; lastFinalPiece=""; };
+            rec.onresult=(e)=>{
+              for(let i=e.resultIndex;i<e.results.length;i++){
+                const r=e.results[i]; const piece=normalizeJa((r[0]&&r[0].transcript)||"");
+                if(r.isFinal){
+                  if(!(finalBuf.endsWith(piece) || almostSame(piece,lastFinalPiece))){ finalBuf=smartAppend(finalBuf,piece); lastFinalPiece=piece; }
+                  interimBuf="";
+                }else{ interimBuf=piece; }
+              }
+              elText.value = normalizeJa(smartAppend(finalBuf, interimBuf)); renderCharCount();
+            };
+            rec.onerror=(e)=>{ console.error("SpeechRecognition Error:",e.error); alertMsg(`音声入力エラー: ${e.error}`); };
+            rec.onend=()=>{ 
+              elText.value=normalizeJa(finalBuf); isRecording=false; btnTTS.classList.remove('rec'); btnTTS.textContent='長押しでSTT（文字起こし）';
+              renderCharCount(); prepareTTS(elText.value.trim());
+            };
+          }
+          return true;
+        }
+        function sttStart(){ if(!ensureSTT()||isRecording) return; try{ rec.start(); isRecording=true; btnTTS.classList.add('rec'); btnTTS.textContent='録音中…（離すと確定）'; }catch(e){ console.error("STT開始エラー:",e); } }
+        function sttStop(){ if(!rec||!isRecording) return; try{ rec.stop(); }catch(e){ console.error("STT停止エラー:",e); } }
+        document.addEventListener("visibilitychange",()=>{ if(document.hidden) sttStop(); });
+        window.addEventListener("beforeunload",()=>{ sttStop(); });
 
-    btn.addEventListener('click', function(){
-      var text = getLatestText();
-      if (!text) { alert('下書きが見つからませんでした。先に「保存（ログに追加）」してください。'); return; }
-      try { sessionStorage.setItem('FN_REPORT_PREFILL_TEXT', text); } catch(e){}
-      /* href は ?draft=1&prefill=1 を含むため、そのまま遷移（target="_blank"） */
-    });
-  })();
+        if(btnTTS){
+          const down=()=>{ longPressed=false; pressTimer=setTimeout(()=>{ longPressed=true; sttStart(); },600); };
+          const up=()=>{ clearTimeout(pressTimer); if(longPressed){ sttStop(); } };
+          const cancel=()=>{ clearTimeout(pressTimer); };
+          btnTTS.addEventListener("mousedown",down); btnTTS.addEventListener("mouseup",up); btnTTS.addEventListener("mouseleave",cancel);
+          btnTTS.addEventListener("touchstart",down,{passive:true}); btnTTS.addEventListener("touchend",up); btnTTS.addEventListener("touchcancel",cancel);
+          btnTTS.addEventListener("contextmenu",e=>e.preventDefault());
+        }
 
-})();
-</script>
-{% endblock %}
+        btnClear.addEventListener("click",()=>{ elText.value=""; renderCharCount(); });
+        btnSave.addEventListener("click",onSaveClicked);
+        btnSync.addEventListener("click",syncAllPending);
+        btnPurge.addEventListener("click",()=>{ if(!confirm("ローカル下書きを全て削除します。よろしいですか？")) return; localStorage.removeItem(LS_DRAFTS); renderTable(); });
+
+        renderTable();
+      })();
+    </script>
+  </main>
+
+  <footer class="border-top py-4 mt-4">
+    <div class="container d-flex justify-content-between small">
+      <span>© FieldNote</span>
+      <span>v2.5</span>
+    </div>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

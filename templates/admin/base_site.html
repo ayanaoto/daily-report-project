@@ -3,15 +3,9 @@
 
 {% block branding %}
   <h1 id="site-name">
-    <a href="{% url 'admin:index' %}">{{ site_header|default:"FieldNote" }}</a>
+    <a href="{% url 'admin:index' %}">{{ site_header|default:"FieldNote Admin" }}</a>
   </h1>
-  <a href="/" class="button" style="
-      margin-left:1rem;
-      padding:.4rem .8rem;
-      border:1px solid #7dd3fc;
-      border-radius:.5rem;
-      text-decoration:none;
-      ">
-    ← メインサイトへ
+  <a href="/" class="button" style="margin-left:1rem;">
+    メインサイトへ
   </a>
 {% endblock %}

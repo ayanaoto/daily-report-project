@@ -1,0 +1,117 @@
+/* ===== FieldNote - Jazzmin(Darkly)風 メインサイト調整 ===== */
+
+:root{
+  --fn-sidebar-w: 260px;
+  --fn-bg: #0b0f17;
+  --fn-panel: rgba(17,24,39,.68);
+  --fn-border: rgba(255,255,255,.08);
+}
+
+.fn-body{
+  background: var(--fn-bg);
+  color: #e5e7eb;
+}
+
+/* Top navbar */
+.fn-navbar{
+  background: rgba(15,23,42,.9);
+  border-bottom: 1px solid var(--fn-border);
+  backdrop-filter: blur(10px);
+}
+
+/* Layout */
+.fn-layout{
+  display: grid;
+  grid-template-columns: var(--fn-sidebar-w) 1fr;
+  min-height: calc(100vh - 56px);
+}
+
+.fn-sidebar{
+  background: rgba(2,6,23,.7);
+  border-right: 1px solid var(--fn-border);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  height: calc(100vh - 56px);
+  overflow-y: auto;
+}
+
+.fn-sidebar-inner .nav-link{
+  color: #a8b3cf;
+  border: 1px solid transparent;
+  border-radius: .6rem;
+}
+
+.fn-sidebar-inner .nav-link:hover{
+  background: rgba(59,130,246,.12);
+  color: #dbeafe;
+  border-color: rgba(255,255,255,.06);
+}
+
+.fn-sidebar-inner .nav-link.active{
+  background: linear-gradient(90deg, rgba(59,130,246,.26), rgba(99,102,241,.26));
+  color: #fff;
+  border-color: rgba(255,255,255,.14);
+}
+
+.fn-content{
+  background: transparent;
+}
+
+/* Cards / tables to feel like Jazzmin */
+.card{
+  background: var(--fn-panel);
+  border: 1px solid var(--fn-border);
+  border-radius: 14px;
+}
+
+.table{
+  --bs-table-bg: transparent;
+  --bs-table-color: #e5e7eb;
+  border-color: var(--fn-border);
+}
+
+.table thead th{
+  color:#cbd5e1;
+  border-bottom:1px solid var(--fn-border);
+}
+
+.table tbody td{
+  border-top:1px solid var(--fn-border);
+}
+
+/* Responsive: sidebar becomes overlay */
+@media (max-width: 991.98px){
+  .fn-layout{
+    grid-template-columns: 0 1fr;
+  }
+  .fn-sidebar{
+    position: fixed;
+    left: 0; top: 56px;
+    width: var(--fn-sidebar-w);
+    height: calc(100vh - 56px);
+    transform: translateX(-100%);
+    transition: transform .2s ease;
+    z-index: 1040;
+  }
+  .fn-sidebar.is-open{
+    transform: translateX(0);
+  }
+}
+
+/* Small helpers */
+a.link-light{ color:#cfe1ff; }
+a.link-light:hover{ color:#ffffff; }
+
+.btn-outline-light{
+  border-color: rgba(255,255,255,.35);
+  color: #e5e7eb;
+}
+
+.btn-outline-light:hover{
+  background: rgba(255,255,255,.12);
+}
+
+.alert{
+  border-color: var(--fn-border);
+}

@@ -1,37 +1,140 @@
-{% extends 'base.html' %}
-
-{% block title %}新しい日報を投稿する{% endblock %}
-
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h1>新しい日報を投稿する</h1>
-            </div>
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    {% for field in form %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {{ field }}
-                        </div>
-                    {% endfor %}
-                    <button type="submit" class="btn btn-primary">投稿する</button>
-                    <a href="{% url 'report_list' %}" class="btn btn-secondary">キャンセル</a>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        new TomSelect('#id_customer_select',{ create: true });
-        new TomSelect('#id_deal_select',{ create: true });
-    });
+(function(){
+  "use strict";
+
+  if (new URLSearchParams(location.search).get("prefill") !== "1") return;
+
+  const SS_KEY = "FN_REPORT_PREFILL";
+  const LS_KEY = "FN_REPORT_PREFILL_ONCE";
+
+  const readPayload = () => {
+    try { const s = sessionStorage.getItem(SS_KEY); if (s) return JSON.parse(s); } catch {}
+    try { const l = localStorage.getItem(LS_KEY);  if (l) return JSON.parse(l); } catch {}
+    return null;
+  };
+  const clearPayload = () => { try{sessionStorage.removeItem(SS_KEY);}catch{} try{localStorage.removeItem(LS_KEY);}catch{} };
+
+  const isVisible = (el) => {
+    if (!el) return false;
+    const st = getComputedStyle(el);
+    if (st.display === "none" || st.visibility === "hidden") return false;
+    const r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0;
+  };
+
+  function findBodyTarget(){
+    // 1) 代表的セレクタ
+    const pri = [
+      "#report-body","#id_body","#id_content",
+      "textarea[name='body']","textarea[name='content']",
+    ];
+    for (const sel of pri){
+      const el = document.querySelector(sel);
+      if (el && isVisible(el)) return {el, kind:"textarea"};
+    }
+
+    // 2) <label> ありパターン
+    const labelKW = /作業内容|本文|内容|備考|メモ|詳細|報告|コメント|説明/;
+    for (const lb of Array.from(document.querySelectorAll("label"))){
+      const t = (lb.textContent||"").trim();
+      if (!labelKW.test(t)) continue;
+      const id = lb.getAttribute("for");
+      if (id){
+        const el = document.getElementById(id);
+        if (el && el.tagName==="TEXTAREA" && isVisible(el)) return {el,kind:"textarea"};
+      }
+      const inParent = lb.parentElement?.querySelector("textarea");
+      if (inParent && isVisible(inParent)) return {el:inParent,kind:"textarea"};
+      let sib = lb.nextElementSibling;
+      while (sib){
+        if (sib.tagName==="TEXTAREA" && isVisible(sib)) return {el:sib,kind:"textarea"};
+        const inner = sib.querySelector && sib.querySelector("textarea");
+        if (inner && isVisible(inner)) return {el:inner,kind:"textarea"};
+        sib = sib.nextElementSibling;
+      }
+    }
+
+    // 3) ラベル無し：行見出しの直後の textarea をスコア推定
+    const areas = Array.from(document.querySelectorAll("textarea")).filter(isVisible);
+    if (areas.length){
+      const score = (ta)=>{
+        let s = 0;
+        const prev = ta.previousElementSibling;
+        const prevTxt = (prev && prev.textContent ? prev.textContent : "").replace(/\s/g,"");
+        if (/作業内容/.test(prevTxt)) s += 120;
+        if (/備考/.test(prevTxt))     s += 100;
+        const attrs = (ta.getAttribute("aria-label")||"") + (ta.placeholder||"") + (ta.name||"") + (ta.id||"");
+        if (/body|content|memo|note|作業内容|備考/.test(attrs)) s += 40;
+        const r = ta.getBoundingClientRect();
+        s += Math.min(50, (r.width*r.height)/10000);
+        return s;
+      };
+      areas.sort((a,b)=>score(b)-score(a));
+      return {el:areas[0], kind:"textarea"};
+    }
+
+    // 4) リッチエディタ
+    const edits = Array.from(document.querySelectorAll('[contenteditable=""],[contenteditable="true"]')).filter(isVisible);
+    if (edits.length){
+      edits.sort((a,b)=> {
+        const ra=a.getBoundingClientRect(), rb=b.getBoundingClientRect();
+        return (rb.width*rb.height)-(ra.width*ra.height);
+      });
+      return {el:edits[0], kind:"editable"};
+    }
+    return null;
+  }
+
+  function insertText(target, text){
+    if (!target) return false;
+    if (target.kind === "textarea"){
+      const el = target.el;
+      el.value = el.value ? (el.value + "\n" + text) : text;
+      try{
+        el.focus();
+        if (typeof el.selectionStart === "number"){ el.selectionStart = el.selectionEnd = el.value.length; }
+        el.dispatchEvent(new Event("input",{bubbles:true}));
+        el.dispatchEvent(new Event("change",{bubbles:true}));
+      }catch{}
+      return true;
+    }else{
+      const el = target.el;
+      const current = el.innerText || el.textContent || "";
+      const combined = current ? (current + "\n" + text) : text;
+      el.innerHTML = combined.split("\n")
+        .map(s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"))
+        .join("<br>");
+      try{ el.focus(); }catch{}
+      try{ el.dispatchEvent(new Event("input",{bubbles:true})); }catch{}
+      try{ el.dispatchEvent(new Event("change",{bubbles:true})); }catch{}
+      return true;
+    }
+  }
+
+  const payload = readPayload();
+  if (!payload || !payload.text || !String(payload.text).trim()){ clearPayload(); return; }
+  const text = String(payload.text);
+
+  let done = false;
+  const tryInsert = () => {
+    if (done) return;
+    const target = findBodyTarget();
+    if (!target) return;
+    if (insertText(target, text)){
+      done = true;
+      clearPayload();
+      if (observer) observer.disconnect();
+    }
+  };
+
+  if (document.readyState === "loading"){
+    document.addEventListener("DOMContentLoaded", ()=>{ tryInsert(); setTimeout(tryInsert, 100); });
+  }else{
+    tryInsert(); setTimeout(tryInsert, 100);
+  }
+
+  const observer = new MutationObserver(tryInsert);
+  observer.observe(document.documentElement, {childList:true, subtree:true});
+  setTimeout(()=>{ if (!done) observer.disconnect(); }, 30000);
+})();
 </script>
-{% endblock %}

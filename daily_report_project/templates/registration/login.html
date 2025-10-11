@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}繝ｭ繧ｰ繧､繝ｳ{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header text-center">
+          <h2 class="m-0">繝ｭ繧ｰ繧､繝ｳ</h2>
+        </div>
+        <div class="card-body">
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for e in form.non_field_errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+            </div>
+          {% elif form.errors %}
+            <div class="alert alert-danger">繝ｦ繝ｼ繧ｶ繝ｼ蜷阪∪縺溘・繝代せ繝ｯ繝ｼ繝峨′豁｣縺励￥縺ゅｊ縺ｾ縺帙ｓ縲・/div>
+          {% endif %}
+
+          <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next|default:'/reports/' }}">
+
+            <div class="mb-3">
+              <label for="id_username" class="form-label">繝ｦ繝ｼ繧ｶ繝ｼ蜷・/label>
+              <input type="text" name="username" id="id_username"
+                     class="form-control{% if form.username.errors %} is-invalid{% endif %}"
+                     value="{{ form.username.value|default:'' }}" autocomplete="username" required autofocus>
+              {% for e in form.username.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+            </div>
+
+            <div class="mb-3">
+              <label for="id_password" class="form-label">繝代せ繝ｯ繝ｼ繝・/label>
+              <input type="password" name="password" id="id_password"
+                     class="form-control{% if form.password.errors %} is-invalid{% endif %}"
+                     autocomplete="current-password" required>
+              {% for e in form.password.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+            </div>
+
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">繝ｭ繧ｰ繧､繝ｳ</button>
+            </div>
+          </form>
+
+          <div class="mt-3 d-flex justify-content-between">
+            <a href="{% url 'password_reset' %}">繝代せ繝ｯ繝ｼ繝峨ｒ縺雁ｿ倥ｌ縺ｧ縺吶°・・/a>
+            <!-- 縺ｩ縺｡繧峨〒繧ょ虚縺上ｈ縺・project-level 'signup' 繧剃ｽ懊▲縺ｦ縺ゅｋ諠ｳ螳・-->
+            <a href="{% url 'accounts:signup' %}">譁ｰ隕冗匳骭ｲ</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

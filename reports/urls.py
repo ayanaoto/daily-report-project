@@ -1,3 +1,4 @@
+# reports/urls.py
 from django.urls import path
 from . import views
 
@@ -5,15 +6,20 @@ app_name = "reports"
 
 urlpatterns = [
     # Report 一覧/詳細/作成/編集/削除
-    path("", views.ReportListView.as_view(), name="report_list"),                 # /reports/
-    path("create/", views.ReportCreateView.as_view(), name="report_create"),      # /reports/create/
-    path("<int:pk>/", views.ReportDetailView.as_view(), name="report_detail"),    # /reports/1/
+    path("", views.ReportListView.as_view(), name="report_list"),
+    path("create/", views.ReportCreateView.as_view(), name="report_create"),
+    path("<int:pk>/", views.ReportDetailView.as_view(), name="report_detail"),
     path("<int:pk>/edit/", views.ReportUpdateView.as_view(), name="report_update"),
     path("<int:pk>/delete/", views.ReportDeleteView.as_view(), name="report_delete"),
     path("export/", views.report_export_csv, name="report_export_csv"),
 
-    # ダッシュボード
+    # プロフィール
+    path("profile/", views.profile_update, name="profile"),
+
+   # ダッシュボード
     path("dashboard/", views.dashboard, name="dashboard"),
+    # 【追加】ダッシュボードのデータ供給API
+    path("dashboard/data/", views.dashboard_data, name="dashboard_data"),
 
     # 顧客
     path("customers/", views.CustomerListView.as_view(), name="customer_list"),
@@ -42,6 +48,11 @@ urlpatterns = [
     path("todo/<int:pk>/edit/", views.TodoUpdateView.as_view(), name="todo_update"),
     path("todo/<int:pk>/delete/", views.TodoDeleteView.as_view(), name="todo_delete"),
     path("todo/<int:pk>/toggle/", views.todo_toggle, name="todo_toggle"),
+    
+    # 【重要】選択したToDoを一括削除するためのURLを追加
+    path("todo/delete-selected/", views.todo_delete_selected, name="todo_delete_selected"),
+    
+    # CSVエクスポート用のURLを追加
     path("todo/export/", views.todo_export_csv, name="todo_export_csv"),
 
     # Voice Logger ページ

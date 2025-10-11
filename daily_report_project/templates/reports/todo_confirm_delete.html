@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}ToDo蜑企勁{% endblock %}
+{% block content %}
+<div class="container py-4">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h1 class="h5">蜑企勁遒ｺ隱・/h1>
+      <p class="mb-3">縲鶏{ obj }}縲阪ｒ蜑企勁縺励∪縺吶ゅｈ繧阪＠縺・〒縺吶°・・/p>
+      <form method="post">
+        {% csrf_token %}
+        <button class="btn btn-danger">蜑企勁</button>
+        <a class="btn btn-outline-light" href="{% url 'todo_list' %}">繧ｭ繝｣繝ｳ繧ｻ繝ｫ</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

@@ -1,11 +1,57 @@
-{% extends 'base.html' %}
-{% block title %}{% if form.instance.pk %}トラブルシュートの編集{% else %}トラブルシュートの作成{% endif %}{% endblock %}
+{% extends "base.html" %}
+{% load widget_tweaks %}  {# ← この行を追加 #}
+
+{% block title %}ナレッジ情報{% if not object %}登録{% else %}編集{% endif %}{% endblock %}
+
 {% block content %}
-    <h1>{% if form.instance.pk %}トラブルシュートの編集{% else %}トラブルシュートの作成{% endif %}</h1>
-    <form method="post">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">保存</button>
-        <a href="{% url 'reports:troubleshooting_list' %}" class="btn btn-secondary">キャンセル</a>
-    </form>
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="h4 mb-4">
+            {% if not object %}ナレッジの新規登録{% else %}ナレッジ情報の編集{% endif %}
+          </h1>
+
+          <form method="post">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+              <div class="alert alert-danger" role="alert">
+                {{ form.non_field_errors }}
+              </div>
+            {% endif %}
+
+            {% for field in form %}
+              <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {# add_classフィルターが使えるようになります #}
+                {% if field.field.widget.input_type == 'checkbox' %}
+                  <div class="form-check">
+                    {{ field|add_class:"form-check-input" }}
+                  </div>
+                {% else %}
+                  {{ field|add_class:"form-control" }}
+                {% endif %}
+                
+                {% if field.help_text %}
+                  <div class="form-text">{{ field.help_text }}</div>
+                {% endif %}
+                {% for error in field.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endfor %}
+
+            <div class="d-flex gap-2 mt-4">
+              <button type="submit" class="btn btn-primary">保存する</button>
+              <a href="{% url 'reports:troubleshooting_list' %}" class="btn btn-secondary">キャンセル</a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

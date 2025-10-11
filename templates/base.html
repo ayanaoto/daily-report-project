@@ -1,52 +1,35 @@
-{% load static %} 
+{% load static %}
 <!DOCTYPE html>
-<html lang="ja" data-bs-theme="dark">
+<html lang="ja">
   <head>
     <meta charset="utf-8">
-    <title>{% block title %}{{ site_brand|default:"FieldNote" }}{% endblock %}</title>
+    <title>{% block title %}FieldNote{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 
     <style>
-      /* ===============================
-         High-Contrast Global Theme
-         （配色だけ強化。構造は変更しない）
-      ================================ */
+      /* テーマスタイル */
       :root{
-        /* 基本カラー */
-        --fn-page-bg: #ffffff;          /* ページ背景 */
-        --fn-text:    #0b0f14;          /* ほぼ黒 */
-        --fn-muted:   #4b5563;          /* 説明文など */
-        --fn-border:  #d5dee7;          /* 標準枠線 */
-
-        /* 管理画面寄りキー色 */
-        --fn-header:  #417690;          /* ナビの帯色 */
-        --fn-accent:  #79aec8;          /* 見出し/ボタン */
-        --fn-accent-2:#2a6078;          /* もう少し濃い帯 */
-        --fn-accent-h:#195c77;          /* ホバー時 */
-
-        /* 入力系（白地＋濃い文字＋くっきり枠） */
+        --fn-page-bg: #f8f9fa;
+        --fn-text:    #212529;
+        --fn-header:  #417690;
+        --fn-accent:  #79aec8;
+        --fn-accent-2:#2a6078;
+        --fn-accent-h:#195c77;
         --fn-input-bg:#ffffff;
         --fn-input-tx:#0b0f14;
-        --fn-input-bd:#334155;          /* 2px枠の色 */
-        --fn-input-ph:#6b7280;          /* placeholder */
-
-        /* リンク */
+        --fn-input-bd:#334155;
+        --fn-input-ph:#6b7280;
         --fn-link:#1f4d66;
         --fn-link-h:#14394d;
       }
-
-      /* 全体 */
       body{
         background: var(--fn-page-bg);
         color: var(--fn-text);
       }
       a{ color: var(--fn-link); text-decoration: none; }
       a:hover{ color: var(--fn-link-h); }
-
-      /* ヘッダー（管理画面寄りの青緑） */
       .navbar{
         background: var(--fn-header) !important;
         border-bottom: 0 !important;
@@ -54,17 +37,13 @@
       .navbar .navbar-brand,
       .navbar .nav-link{ color:#eef7fb !important; }
       .navbar .nav-link:hover{ color:#ffffff !important; }
-
-      /* カード/区切り */
-      .card{ background:#fff; border:1px solid var(--fn-border); }
+      .card{ background:#fff; border:1px solid #dee2e6; }
       .card-header{
         background: var(--fn-accent);
         border-bottom:0;
         color:#fff;
         font-weight:600;
       }
-
-      /* 入力（白地＋濃い文字＋2px枠） */
       .form-control,
       .form-select,
       .input-group-text{
@@ -80,8 +59,6 @@
         box-shadow: 0 0 0 .2rem rgba(41,97,120,.20);
       }
       .form-label{ color:#0f172a; font-weight:600; }
-
-      /* ボタン：彩度は維持、明度を下げコントラストUP */
       .btn-primary{
         background: var(--fn-accent-2) !important;
         border-color: var(--fn-accent-2) !important;
@@ -101,12 +78,12 @@
         border-color:#225a33 !important;
       }
       .btn-outline-light{
-        color:#0f172a !important;
-        border-color:#334155 !important;
+        color:#fff !important;
+        border-color: #fff !important;
       }
       .btn-outline-light:hover{
-        background:#e6f2f7 !important;
-        color:#0b0f14 !important;
+        background: rgba(255, 255, 255, 0.15) !important;
+        color:#fff !important;
       }
       .btn-outline-secondary{
         color:#0f172a !important;
@@ -116,131 +93,20 @@
         background:#e6f2f7 !important;
         color:#0b0f14 !important;
       }
-
-      /* テーブル：ヘッダー濃色帯＋交互色 */
-      .table{ --bs-table-bg: transparent; }
       .table thead th{
         background: var(--fn-accent-2) !important;
         color:#fff !important;
         border-bottom:0 !important;
       }
-      .table-striped > tbody > tr:nth-of-type(odd) > *{
-        background:#f6fbff !important;
-      }
-      .table > :not(caption) > * > *{
-        border-bottom:1.5px solid #cbd5e1 !important;
-      }
-
-      /* ドロップダウンは白地に */
-      .dropdown-menu{
-        background:#ffffff !important;
-        border:1px solid var(--fn-border) !important;
-      }
-      .dropdown-item{ color: var(--fn-text) !important; }
-      .dropdown-item:hover{ background:#eef7fb !important; }
-
-      /* バッジなど */
-      .badge.bg-primary{ background: var(--fn-accent-2) !important; }
-
-      /* フッター */
-      footer{ color: var(--fn-muted); }
-      .chip{
-        display:inline-block; padding:.25rem .5rem;
-        border:1px solid var(--fn-border); border-radius:9999px;
-        background:#fff; color:#333;
-      }
-      .page-title{ font-weight:800; color:#0f172a; letter-spacing:.02em; }
-      .shadow-soft{ box-shadow: 0 10px 30px rgba(0,0,0,.12); }
-
-      /* ====== empty/alert を白地・濃文字に統一（黒帯対策） ====== */
-      .alert{
-        background:#ffffff !important;
-        color:#0b0f14 !important;
-        border:2px solid var(--fn-border) !important;
-      }
-      .alert.alert-dark,
-      .alert.text-bg-dark,
-      .alert.bg-dark{
-        background:#ffffff !important;
-        color:#0b0f14 !important;
-        border-color:var(--fn-border) !important;
-      }
-      /* もし空表示の独自クラスがあればまとめて白化 */
-      .empty-state,
-      .list-empty,
-      .table-empty,
-      .no-data,
-      .result-empty{
-        background:#ffffff !important;
-        color:#0b0f14 !important;
-        border:2px solid var(--fn-border) !important;
-      }
-      /* コンテナ/カード内に残る .bg-dark 系を白化（保険） */
-      .container :is(.bg-dark,.text-bg-dark),
-      .card :is(.bg-dark,.text-bg-dark){
-        background:#ffffff !important;
-        color:#0b0f14 !important;
-        border:2px solid var(--fn-border) !important;
-      }
-
-      /* ===== File input を薄い緑系に（ボタンのみ色変更） ===== */
-      .form-control[type="file"]{
-        background:#ffffff !important;
-        color:#0b0f14 !important;
-        border:2px solid var(--fn-input-bd) !important;
-      }
-      .form-control[type="file"]::file-selector-button{
-        margin-inline-end:.75rem;
-        padding:.45rem .9rem;
-        border:2px solid #6fbf8b;       /* 緑系の枠 */
-        border-radius:.375rem;
-        background:#e8f8ee;              /* 薄い緑 */
-        color:#0b0f14;
-        font-weight:600;
-        cursor:pointer;
-      }
-      /* hover をもっと薄く（微差に） */
-      .form-control[type="file"]:hover::file-selector-button{
-        background:#eaf9f2;              /* さらに薄い変化 */
-        border-color:#6fbf8b;            /* 通常と同じ枠色 */
-      }
-      .form-control[type="file"]:active::file-selector-button{
-        background:#d5efdf;
-        border-color:#379664;
-      }
-      /* 互換: WebKit */
-      input[type="file"]::-webkit-file-upload-button{
-        margin-inline-end:.75rem;
-        padding:.45rem .9rem;
-        border:2px solid #6fbf8b;
-        border-radius:.375rem;
-        background:#e8f8ee;
-        color:#0b0f14;
-        font-weight:600;
-        cursor:pointer;
-      }
-      input[type="file"]:hover::-webkit-file-upload-button{
-        background:#eaf9f2;              /* さらに薄い変化 */
-        border-color:#6fbf8b;
-      }
-      input[type="file"]:active::-webkit-file-upload-button{
-        background:#d5efdf;
-        border-color:#379664;
-      }
-      .form-control[type="file"]:focus{
-        border-color:#43a368 !important;
-        box-shadow:0 0 0 .2rem rgba(67,163,104,.25) !important;
-        outline:0;
-      }
+      footer{ color: #6c757d; }
     </style>
 
     {% block extra_head %}{% endblock %}
   </head>
   <body>
-    <!-- NAV -->
     <nav class="navbar navbar-expand-lg navbar-dark sticky-top">
       <div class="container">
-        <a class="navbar-brand fw-bold" href="{% url 'reports:report_list' %}">{{ site_brand|default:"FieldNote" }}</a>
+        <a class="navbar-brand fw-bold" href="{% url 'reports:report_list' %}">FieldNote</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
           <span class="navbar-toggler-icon"></span>
         </button>
@@ -256,50 +122,47 @@
           </ul>
 
           <div class="d-flex align-items-center gap-2">
-            <a class="btn btn-success" href="{% url 'reports:report_create' %}">＋ 日報</a>
+            <a class="btn btn-success" href="{% url 'reports:report_create' %}">＋日報</a>
 
-            {% if request.user.is_authenticated %}
+            {% if user.is_authenticated %}
               <div class="dropdown">
                 <button class="btn btn-outline-light dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
-                  {{ request.user.username|default:"ユーザー" }}
+                  {{ user.username }}
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
                   <li><a class="dropdown-item" href="{% url 'reports:profile' %}">プロフィール</a></li>
-                  {% if request.user.is_staff %}
+                  {% if user.is_staff %}
                   <li><a class="dropdown-item" href="{% url 'admin:index' %}">管理サイト</a></li>
                   {% endif %}
                   <li><hr class="dropdown-divider"></li>
                   <li>
                     <form action="{% url 'logout' %}" method="post" class="px-2 py-1">
                       {% csrf_token %}
-                      <button type="submit" class="btn btn-sm btn-outline-light w-100">ログアウト</button>
+                      <button type="submit" class="btn btn-sm btn-outline-danger w-100">ログアウト</button>
                     </form>
                   </li>
                 </ul>
               </div>
             {% else %}
               <a class="btn btn-outline-light" href="{% url 'login' %}">ログイン</a>
-              <a class="btn btn-primary" href="{% url 'reports:signup' %}">新規登録</a>
+              <a class="btn btn-primary" href="{% url 'signup' %}">新規登録</a>
             {% endif %}
           </div>
         </div>
       </div>
     </nav>
 
-    <!-- CONTENT -->
     <main class="container py-4">
       {% block content %}{% endblock %}
     </main>
 
-    <!-- FOOTER -->
     <footer class="border-top py-4 mt-4">
       <div class="container d-flex justify-content-between small">
-        <span>© {{ site_brand|default:"FieldNote" }}</span>
-        <span class="chip">v1.0</span>
+        <span>© FieldNote</span>
+        <span>v1.0</span>
       </div>
     </footer>
 
-    <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
   </body>

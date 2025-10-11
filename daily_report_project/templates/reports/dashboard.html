@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}譌･蝣ｱ 邨ｱ險医ム繝・す繝･繝懊・繝閲% endblock %}
+
+{% block extra_head %}
+<style>
+  /* 窶披披・繝繝・す繝･繝懊・繝峨・蜿ｯ隱ｭ諤ｧ蠑ｷ蛹厄ｼ郁牡繝ｻ螟ｪ縺輔・縺ｿ・・窶披披・*/
+  .db-title{
+    font-size:2rem; font-weight:800; letter-spacing:.02em;
+    color:#0f172a;  /* 豼・ｴｺ縺ｧ縺上▲縺阪ｊ */
+  }
+  .db-subtle{ color:#334155; }             /* 繝ｩ繝吶Ν邉ｻ縺ｯ荳ｭ豼・牡 */
+  .db-card{ background:#ffffff; border:1px solid #e5e7eb; border-radius:.75rem; }
+  .db-card header{
+    padding:.9rem 1rem; border-bottom:1px solid #e5e7eb;
+    color:#0f172a; font-weight:700;
+  }
+  .db-card .db-body{ padding:1rem; color:#0b0f14; }
+  .kpi{
+    display:flex; gap:1rem; flex-wrap:wrap;
+  }
+  .kpi .item{
+    flex:1 1 220px; background:#ffffff; border:1px solid #e5e7eb; border-radius:.75rem;
+    padding:1rem;
+  }
+  .kpi .item .label{ color:#475569; font-weight:600; }
+  .kpi .item .value{ font-size:1.8rem; font-weight:800; color:#0f172a; }
+  .table-kv{ width:100%; }
+  .table-kv th, .table-kv td{ padding:.5rem .6rem; border-top:1px solid #eef2f7; }
+  .table-kv th{ width:60%; color:#0f172a; font-weight:700; }
+  .hint{ color:#64748b; font-size:.9rem; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <h1 class="db-title mb-3">譌･蝣ｱ 邨ｱ險医ム繝・す繝･繝懊・繝・/h1>
+  <p class="db-subtle mb-4">繝壹・繧ｸ隱ｭ縺ｿ霎ｼ縺ｿ譎らせ縺ｮ髮・ｨ医らｵ槭ｊ霎ｼ縺ｿ繝ｻCSV縺ｯ縲後Ξ繝昴・繝井ｸ隕ｧ縲阪〒陦後∴縺ｾ縺吶・/p>
+
+  <!-- KPI・井ｻ頑律・丈ｻ頑怦・・-->
+  <div class="kpi mb-4">
+    <div class="item">
+      <div class="label">譛ｬ譌･縺ｮ繝ｬ繝昴・繝井ｻｶ謨ｰ</div>
+      <div class="value">{{ today_count|default:0 }}</div>
+    </div>
+    <div class="item">
+      <div class="label">莉頑怦縺ｮ繝ｬ繝昴・繝井ｻｶ謨ｰ</div>
+      <div class="value">{{ month_count|default:0 }}</div>
+    </div>
+    <div class="item">
+      <div class="label">譛ｬ譌･縺ｮ菴懈･ｭ譎る俣・域凾髢薙・蜷郁ｨ茨ｼ・/div>
+      <div class="value">{{ today_hours|default:"0.0" }}</div>
+    </div>
+    <div class="item">
+      <div class="label">莉頑怦縺ｮ菴懈･ｭ譎る俣・域凾髢薙・蜷郁ｨ茨ｼ・/div>
+      <div class="value">{{ month_hours|default:"0.0" }}</div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- 1) 蝣ｴ謇 蛻･ 莉ｶ謨ｰ・井ｸ贋ｽ搾ｼ俄・繧ｰ繝ｩ繝慕ｽｮ縺榊ｴ・亥ｾ後〒JS縺ｧ蟾ｮ縺玲崛縺医ｉ繧後ｋ繧医≧遨ｺDIV・・-->
+    <div class="col-12 col-lg-6">
+      <section class="db-card">
+        <header>蝣ｴ謇蛻･ 莉ｶ謨ｰ・井ｸ贋ｽ搾ｼ・/header>
+        <div class="db-body">
+          <div id="chart-location" class="w-100" style="height:280px;"></div>
+          <p class="hint mt-2">窶ｻ 蜿ｯ隕門喧縺ｯ蠕後°繧芽ｿｽ蜉縺励※OK縲ゅ∪縺壹・譫縺ｮ縺ｿ縲・/p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 2) 騾ｲ謐・蜀・ｨｳ 窶・繧ｰ繝ｩ繝慕ｽｮ縺榊ｴ -->
+    <div class="col-12 col-lg-6">
+      <section class="db-card">
+        <header>騾ｲ謐・蜀・ｨｳ</header>
+        <div class="db-body">
+          <div id="chart-progress" class="w-100" style="height:280px;"></div>
+          <p class="hint mt-2">騾ｲ謐励ヵ繧｣繝ｼ繝ｫ繝峨′縺ゅｋ蝣ｴ蜷医↓髮・ｨ亥ｯｾ雎｡縲・/p>
+        </div>
+      </section>
+    </div>
+
+    <!-- 3) 莠ｺ迚ｩ・域球蠖・菴懈・閠・ｼ牙挨 莉ｶ謨ｰ・井ｸ贋ｽ搾ｼ・窶・繧ｵ繝槭Μ陦ｨ -->
+    <div class="col-12 col-lg-6">
+      <section class="db-card h-100">
+        <header>莠ｺ迚ｩ・域球蠖・菴懈・閠・ｼ牙挨 莉ｶ謨ｰ・井ｸ贋ｽ搾ｼ・/header>
+        <div class="db-body">
+          {% if by_author %}
+            <table class="table-kv">
+              <tbody>
+              {% for row in by_author %}
+                <tr>
+                  <th>{{ row.author__username|default:"(荳肴・)" }}</th>
+                  <td>{{ row.cnt }}</td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p class="mb-0">繝・・繧ｿ縺後≠繧翫∪縺帙ｓ縲・/p>
+          {% endif %}
+        </div>
+      </section>
+    </div>
+
+    <!-- 4) 菴懈･ｭ譎る俣・亥・・・蜷郁ｨ・| 逶ｴ霑・0譌･ 窶・繧ｰ繝ｩ繝慕ｽｮ縺榊ｴ -->
+    <div class="col-12 col-lg-6">
+      <section class="db-card h-100">
+        <header>菴懈･ｭ譎る俣・亥・・牙粋險茨ｽ懃峩霑・0譌･</header>
+        <div class="db-body">
+          <div id="chart-hours" class="w-100" style="height:280px;"></div>
+          <p class="hint mt-2">`work_hours` 縺後≠繧句ｴ蜷医↓髮・ｨ亥庄閭ｽ縲・/p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{# 蟆・擂逧・↓繧ｰ繝ｩ繝弼S繧貞・繧後ｋ縺ｪ繧峨％縺薙↓縲ゆｻ雁屓縺ｯ隕九◆逶ｮ縺ｮ縺ｿ蠑ｷ蛹悶・#}
+{% endblock %}
+

@@ -1,125 +1,135 @@
 {% extends "base.html" %}
-{% load static %}
 
-{% block title %}日報 統計ダッシュボード{% endblock %}
-
-{% block extra_head %}
-<style>
-  /* ——— ダッシュボードの可読性強化（色・太さのみ） ——— */
-  .db-title{
-    font-size:2rem; font-weight:800; letter-spacing:.02em;
-    color:#0f172a;  /* 濃紺でくっきり */
-  }
-  .db-subtle{ color:#334155; }             /* ラベル系は中濃色 */
-  .db-card{ background:#ffffff; border:1px solid #e5e7eb; border-radius:.75rem; }
-  .db-card header{
-    padding:.9rem 1rem; border-bottom:1px solid #e5e7eb;
-    color:#0f172a; font-weight:700;
-  }
-  .db-card .db-body{ padding:1rem; color:#0b0f14; }
-  .kpi{
-    display:flex; gap:1rem; flex-wrap:wrap;
-  }
-  .kpi .item{
-    flex:1 1 220px; background:#ffffff; border:1px solid #e5e7eb; border-radius:.75rem;
-    padding:1rem;
-  }
-  .kpi .item .label{ color:#475569; font-weight:600; }
-  .kpi .item .value{ font-size:1.8rem; font-weight:800; color:#0f172a; }
-  .table-kv{ width:100%; }
-  .table-kv th, .table-kv td{ padding:.5rem .6rem; border-top:1px solid #eef2f7; }
-  .table-kv th{ width:60%; color:#0f172a; font-weight:700; }
-  .hint{ color:#64748b; font-size:.9rem; }
-</style>
-{% endblock %}
+{% block title %}グラフ分析ダッシュボード{% endblock %}
 
 {% block content %}
 <div class="container py-4">
+  <h1 class="h3 mb-4">グラフ分析ダッシュボード</h1>
 
-  <h1 class="db-title mb-3">日報 統計ダッシュボード</h1>
-  <p class="db-subtle mb-4">ページ読み込み時点の集計。絞り込み・CSVは「レポート一覧」で行えます。</p>
-
-  <!-- KPI（今日／今月） -->
-  <div class="kpi mb-4">
-    <div class="item">
-      <div class="label">本日のレポート件数</div>
-      <div class="value">{{ today_count|default:0 }}</div>
+  <div class="row mb-4">
+    <div class="col-md-4 mb-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title">あなたの総作業件数</h5>
+          <p class="card-text fs-2 fw-bold" id="user-total-count">0</p>
+        </div>
+      </div>
     </div>
-    <div class="item">
-      <div class="label">今月のレポート件数</div>
-      <div class="value">{{ month_count|default:0 }}</div>
+    <div class="col-md-4 mb-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title">グループ全体の総作業件数</h5>
+          <p class="card-text fs-2 fw-bold" id="group-total-count">0</p>
+        </div>
+      </div>
     </div>
-    <div class="item">
-      <div class="label">本日の作業時間（時間・合計）</div>
-      <div class="value">{{ today_hours|default:"0.0" }}</div>
-    </div>
-    <div class="item">
-      <div class="label">今月の作業時間（時間・合計）</div>
-      <div class="value">{{ month_hours|default:"0.0" }}</div>
+    <div class="col-md-4 mb-3">
+      <div class="card shadow-sm h-100">
+        <div class="card-body text-center">
+          <h5 class="card-title">グループ全体の達成率</h5>
+          <p class="card-text fs-2 fw-bold" id="achievement-rate">0 %</p>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="row g-4">
-    <!-- 1) 場所 別 件数（上位）– グラフ置き場（後でJSで差し替えられるよう空DIV） -->
-    <div class="col-12 col-lg-6">
-      <section class="db-card">
-        <header>場所別 件数（上位）</header>
-        <div class="db-body">
-          <div id="chart-location" class="w-100" style="height:280px;"></div>
-          <p class="hint mt-2">※ 可視化は後から追加してOK。まずは枠のみ。</p>
-        </div>
-      </section>
+  <div class="row">
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-sm">
+        <div class="card-header">あなたの進捗ステータス (件数)</div>
+        <div class="card-body"><canvas id="personalProgressChart"></canvas></div>
+      </div>
     </div>
 
-    <!-- 2) 進捗 内訳 – グラフ置き場 -->
-    <div class="col-12 col-lg-6">
-      <section class="db-card">
-        <header>進捗 内訳</header>
-        <div class="db-body">
-          <div id="chart-progress" class="w-100" style="height:280px;"></div>
-          <p class="hint mt-2">進捗フィールドがある場合に集計対象。</p>
-        </div>
-      </section>
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-sm">
+        <div class="card-header">あなたの場所ごと作業時間 (Top 10)</div>
+        <div class="card-body"><canvas id="personalLocationHoursChart"></canvas></div>
+      </div>
     </div>
 
-    <!-- 3) 人物（担当/作成者）別 件数（上位） – サマリ表 -->
-    <div class="col-12 col-lg-6">
-      <section class="db-card h-100">
-        <header>人物（担当/作成者）別 件数（上位）</header>
-        <div class="db-body">
-          {% if by_author %}
-            <table class="table-kv">
-              <tbody>
-              {% for row in by_author %}
-                <tr>
-                  <th>{{ row.author__username|default:"(不明)" }}</th>
-                  <td>{{ row.cnt }}</td>
-                </tr>
-              {% endfor %}
-              </tbody>
-            </table>
-          {% else %}
-            <p class="mb-0">データがありません。</p>
-          {% endif %}
-        </div>
-      </section>
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-sm">
+        <div class="card-header">グループ全体の進捗ステータス</div>
+        <div class="card-body"><canvas id="groupProgressChart"></canvas></div>
+      </div>
     </div>
 
-    <!-- 4) 作業時間（分） 合計 | 直近30日 – グラフ置き場 -->
-    <div class="col-12 col-lg-6">
-      <section class="db-card h-100">
-        <header>作業時間（分）合計｜直近30日</header>
-        <div class="db-body">
-          <div id="chart-hours" class="w-100" style="height:280px;"></div>
-          <p class="hint mt-2">`work_hours` がある場合に集計可能。</p>
-        </div>
-      </section>
+    <div class="col-lg-6 mb-4">
+      <div class="card shadow-sm">
+        <div class="card-header">グループの担当者別作業件数</div>
+        <div class="card-body"><canvas id="groupAuthorChart"></canvas></div>
+      </div>
     </div>
   </div>
-
 </div>
 {% endblock %}
 
+
 {% block extra_js %}
-{# 将来的にグラフJSを入れるならここに。今回は見た目のみ強化。 #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const chartColors = ['#0d6efd', '#6f42c1', '#dc3545', '#fd7e14', '#198754', '#20c997', '#6c757d'];
+  const charts = {}; // グラフインスタンスを保持
+
+  // グラフ作成ヘルパー
+  const makeChart = (ctxId, type, labels, data, label) => {
+    const ctx = document.getElementById(ctxId);
+    if (!ctx) return;
+    if (charts[ctxId]) charts[ctxId].destroy(); // 既存のグラフを破棄
+    charts[ctxId] = new Chart(ctx, {
+      type: type,
+      data: {
+        labels: labels,
+        datasets: [{ label: label, data: data, backgroundColor: chartColors }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, indexAxis: type === 'bar' ? 'y' : 'x' }
+    });
+  };
+
+  async function loadDashboardData() {
+    try {
+      const response = await fetch("{% url 'reports:dashboard_data' %}");
+      if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+
+      // カードの数値を更新
+      document.getElementById('user-total-count').textContent = data.cards.user_total_count;
+      document.getElementById('group-total-count').textContent = data.cards.group_total_count;
+      document.getElementById('achievement-rate').textContent = `${data.cards.achievement_rate} %`;
+
+      // グラフを描画
+      // 1. あなたの進捗
+      const personalProgress = data.charts.personal_progress;
+      if (personalProgress.length > 0) {
+        makeChart('personalProgressChart', 'doughnut', personalProgress.map(d => d.progress), personalProgress.map(d => d.count), '件数');
+      }
+      
+      // 2.【修正】あなたの場所ごと作業時間
+      const personalLocHours = data.charts.personal_location_hours;
+      if (Object.keys(personalLocHours).length > 0) {
+        makeChart('personalLocationHoursChart', 'bar', Object.keys(personalLocHours), Object.values(personalLocHours), '合計作業時間 (h)');
+      }
+
+      // 3. グループ全体の進捗
+      const groupProgress = data.charts.group_progress;
+      if (groupProgress.length > 0) {
+        makeChart('groupProgressChart', 'pie', groupProgress.map(d => d.progress), groupProgress.map(d => d.count), '件数');
+      }
+
+      // 4. グループの担当者別件数
+      const groupAuthor = data.charts.group_author_count;
+      if (groupAuthor.length > 0) {
+        makeChart('groupAuthorChart', 'bar', groupAuthor.map(d => d.author__username), groupAuthor.map(d => d.count), '作業件数');
+      }
+      
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    }
+  }
+
+  loadDashboardData();
+});
+</script>
 {% endblock %}

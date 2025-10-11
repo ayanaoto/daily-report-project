@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}譌･蝣ｱ隧ｳ邏ｰ{% endblock %}
+{% block content %}
+<div class="container" style="max-width:900px">
+  <h1 class="mb-3">譌･蝣ｱ隧ｳ邏ｰ</h1>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <dl class="row mb-0">
+        {% if object.title %}<dt class="col-sm-3">繧ｿ繧､繝医Ν</dt><dd class="col-sm-9">{{ object.title }}</dd>{% endif %}
+        {% if object.author %}<dt class="col-sm-3">諡・ｽ・/dt><dd class="col-sm-9">{{ object.author }}</dd>{% endif %}
+        {% if object.created_at %}<dt class="col-sm-3">菴懈・譌･</dt><dd class="col-sm-9">{{ object.created_at|date:"Y-m-d H:i" }}</dd>{% endif %}
+        {% if object.date %}<dt class="col-sm-3">譌･莉・/dt><dd class="col-sm-9">{{ object.date|date:"Y-m-d" }}</dd>{% endif %}
+        {% if object.report_date %}<dt class="col-sm-3">繝ｬ繝昴・繝域律</dt><dd class="col-sm-9">{{ object.report_date|date:"Y-m-d" }}</dd>{% endif %}
+        {% if object.location %}<dt class="col-sm-3">蝣ｴ謇</dt><dd class="col-sm-9">{{ object.location }}</dd>{% endif %}
+        {% if object.work_hours %}<dt class="col-sm-3">蟾･謨ｰ</dt><dd class="col-sm-9">{{ object.work_hours }}</dd>{% endif %}
+        {% if object.content %}<dt class="col-sm-3">譛ｬ譁・/dt><dd class="col-sm-9"><pre class="mb-0 text-white" style="white-space:pre-wrap">{{ object.content }}</pre></dd>{% endif %}
+      </dl>
+    </div>
+  </div>
+
+  {% if object.attachments.all %}
+  <div class="card">
+    <div class="card-header">豺ｻ莉倥ヵ繧｡繧､繝ｫ</div>
+    <ul class="list-group list-group-flush">
+      {% for a in object.attachments.all %}
+      <li class="list-group-item bg-dark text-white d-flex justify-content-between align-items-center">
+        <div>
+          <div class="fw-bold">{{ a.title|default:"(辟｡鬘・" }}</div>
+          <div class="small text-secondary">{{ a.file.name }}</div>
+        </div>
+        <a class="btn btn-sm btn-outline-secondary" href="{{ a.file.url }}" target="_blank">髢九￥</a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <div class="mt-3 d-flex gap-2">
+    <a class="btn btn-outline-primary" href="{% url 'reports:report_update' object.pk %}">邱ｨ髮・/a>
+    <!-- 竊・縺薙％繧・report_delete 縺ｫ菫ｮ豁｣ -->
+    <a class="btn btn-outline-danger" href="{% url 'reports:report_delete' object.pk %}">蜑企勁</a>
+    <a class="btn btn-light" href="{% url 'reports:report_list' %}">荳隕ｧ縺ｸ</a>
+  </div>
+</div>
+{% endblock %}
+

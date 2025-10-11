@@ -1,0 +1,273 @@
+{# templates/reports/report_form.html #}
+{% extends "base.html" %}
+
+{% block title %}譌･蝣ｱ縺ｮ菴懈・ | {{ site_brand|default:"FieldNote" }}{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* 窶披・鮟堤ｳｻ竊堤區邉ｻ縺ｸ・域ｧ矩繝ｻ鬆・岼縺ｯ螟画峩縺ｪ縺暦ｼ・窶披・*/
+  .page-title { font-size: 2.25rem; font-weight: 800; color:#2f5c74; letter-spacing:.02em; }
+  .form-label { color:#2f3945; }
+  .card { background: #ffffff; border: 1px solid #e6e6e6; }
+  .card-body { padding: 1.75rem; }
+  .form-control, .form-select, textarea {
+    background:#ffffff; border-color:#e6e6e6; color:#111827;
+  }
+  .form-control:focus, .form-select:focus, textarea:focus {
+    background:#ffffff; border-color:#79aec8; box-shadow:0 0 0 .25rem rgba(121,174,200,.25);
+    color:#111827;
+  }
+  .btn-primary { background:#79aec8; border-color:#79aec8; }
+  .btn-outline-light { border-color:#79aec8; color:#417690; }
+  .small-help { color:#6b7280; font-size:.875rem; }
+
+  .preview-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:.75rem; }
+  .preview-item{ position:relative; border:1px solid #e6e6e6; border-radius:.5rem; overflow:hidden; background:#ffffff; }
+  .preview-item img{ width:100%; height:100px; object-fit:cover; display:block; }
+  .preview-item .name{ font-size:.75rem; padding:.25rem .5rem; color:#334155; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <h1 class="page-title mb-4">譌･蝣ｱ縺ｮ菴懈・</h1>
+
+  <div class="card shadow-sm">
+    <div class="card-body">
+
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-3">
+          {% for e in form.non_field_errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+        </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <!-- 譌･莉假ｼ井ｻ雁屓縺ｮ霑ｽ蜉縺ｯ謐ｮ縺育ｽｮ縺搾ｼ・-->
+        <div class="mb-3">
+          <label class="form-label">譌･莉・/label>
+          {% if form.date %}
+            {{ form.date }}
+            {% for e in form.date.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% elif form.report_date %}
+            {{ form.report_date }}
+            {% for e in form.report_date.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% else %}
+            <input type="date" class="form-control" name="date" value="{{ today|default:None|date:'Y-m-d' }}">
+          {% endif %}
+          <div class="small-help">繧ｫ繝ｬ繝ｳ繝繝ｼ縺九ｉ驕ｸ謚槭〒縺阪∪縺吶・/div>
+        </div>
+
+        {% if form.location %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.location.id_for_label }}">蝣ｴ謇</label>
+            {{ form.location }}
+            {% for e in form.location.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          </div>
+        {% endif %}
+
+        {% if form.progress %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.progress.id_for_label }}">騾ｲ謐・/label>
+            {{ form.progress }}
+            {% for e in form.progress.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          </div>
+        {% elif form.status %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.status.id_for_label }}">騾ｲ謐・/label>
+            {{ form.status }}
+            {% for e in form.status.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          </div>
+        {% else %}
+          <div class="mb-3">
+            <label class="form-label">騾ｲ謐・/label>
+            <select name="status" class="form-select">
+              <option value="open">譛ｪ螳御ｺ・/option>
+              <option value="done">螳御ｺ・/option>
+            </select>
+          </div>
+        {% endif %}
+
+        {% if form.content %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.content.id_for_label }}">菴懈･ｭ蜀・ｮｹ</label>
+            {{ form.content }}
+            {% for e in form.content.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          </div>
+        {% elif form.body %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.body.id_for_label }}">菴懈･ｭ蜀・ｮｹ</label>
+            {{ form.body }}
+            {% for e in form.body.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          </div>
+        {% else %}
+          <div class="mb-3">
+            <label class="form-label">菴懈･ｭ蜀・ｮｹ</label>
+            <textarea name="body" class="form-control" rows="8" placeholder="莉頑律縺ｮ蟇ｾ蠢懷・螳ｹ繝ｻ謇諢溘↑縺ｩ"></textarea>
+          </div>
+        {% endif %}
+
+        {% if form.note %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.note.id_for_label }}">蛯呵・/label>
+            {{ form.note }}
+            {% for e in form.note.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          </div>
+        {% elif form.remark %}
+          <div class="mb-3">
+            <label class="form-label" for="{{ form.remark.id_for_label }}">蛯呵・/label>
+            {{ form.remark }}
+            {% for e in form.remark.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">菴懈･ｭ譎る俣・域凾・・/label>
+            {% if form.work_hours %}
+              {{ form.work_hours }}
+              {% for e in form.work_hours.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+            {% else %}
+              <input type="number" name="work_hours" class="form-control" min="0" step="1" placeholder="萓・ 1">
+            {% endif %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">菴懈･ｭ譎る俣・亥・・・/label>
+            {% if form.work_minutes %}
+              {{ form.work_minutes }}
+              {% for e in form.work_minutes.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+            {% else %}
+              <input type="number" name="work_minutes" class="form-control" min="0" max="59" step="1" placeholder="萓・ 30">
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="mt-4 mb-2">
+          <label class="form-label">蜀咏悄繧｢繝・・繝ｭ繝ｼ繝・/label>
+
+          {% if form.photos %}
+            {{ form.photos }}
+            {% for e in form.photos.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% elif form.images %}
+            {{ form.images }}
+            {% for e in form.images.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% elif form.image %}
+            {{ form.image }}
+            {% for e in form.image.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% elif form.attachments %}
+            {{ form.attachments }}
+            {% for e in form.attachments.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+          {% else %}
+            <input id="photoInput" type="file" name="photos" class="form-control" accept="image/*" multiple>
+            <div class="small-help mt-1">逕ｻ蜒上・隍・焚驕ｸ謚槭〒縺阪∪縺呻ｼ・PG/PNG 遲会ｼ峨・/div>
+          {% endif %}
+        </div>
+
+        <div id="photoPreview" class="preview-grid mb-3" aria-live="polite"></div>
+
+        {% for field in form %}
+          {% if field.name not in 'date report_date location progress status content body note remark work_hours work_minutes photos images image attachments' %}
+            <div class="mb-3">
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.help_text %}<div class="small-help mt-1">{{ field.help_text }}</div>{% endif %}
+              {% for e in field.errors %}<div class="invalid-feedback d-block">{{ e }}</div>{% endfor %}
+            </div>
+          {% endif %}
+        {% endfor %}
+
+        <div class="mt-4 d-flex gap-2">
+          <button type="submit" class="btn btn-primary">菫晏ｭ・/button>
+          <a class="btn btn-outline-light" href="{% url 'reports:report_list' %}">謌ｻ繧・/a>
+        </div>
+      </form>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- 逕ｻ蜒上・繝ｬ繝薙Η繝ｼ・域里蟄假ｼ・-->
+<script>
+(function(){
+  function $(sel){ return document.querySelector(sel); }
+  function qq(sel){ return Array.from(document.querySelectorAll(sel)); }
+
+  const fileInputs = qq('input[type="file"][multiple], input[type="file"][name="photos"], input[type="file"][name$="images"], input[type="file"][name$="attachments"], #photoInput');
+  const preview = $("#photoPreview");
+
+  function clearPreview(){ if(preview) preview.innerHTML = ""; }
+  function addPreview(file){
+    if (!preview) return;
+    const url = URL.createObjectURL(file);
+    const wrap = document.createElement('div');
+    wrap.className = 'preview-item';
+    wrap.innerHTML = `
+      <img src="${url}" alt="${file.name}">
+      <div class="name" title="${file.name}">${file.name}</div>
+    `;
+    preview.appendChild(wrap);
+  }
+  function handleChange(ev){
+    clearPreview();
+    const files = ev.target.files || [];
+    Array.from(files).forEach(f => { if(/^image\//.test(f.type)) addPreview(f); });
+  }
+  fileInputs.forEach(inp => inp.addEventListener('change', handleChange));
+})();
+</script>
+
+<!-- 笆ｼ笆ｼ 縲梧怙譁ｰ荳区嶌縺阪〒譌･蝣ｱ縺ｸ縲阪°繧峨・閾ｪ蜍戊ｲｼ繧贋ｻ倥￠・郁ｿｽ蜉・・笆ｼ笆ｼ -->
+<script>
+(function(){
+  // 縲・prefill=1縲阪′莉倥＞縺ｦ縺・ｋ譎ゅ□縺大ｮ溯｡・
+  var sp = new URLSearchParams(location.search);
+  if (sp.get('prefill') !== '1') return;
+
+  // 菴懈･ｭ蜀・ｮｹ・丞ｙ閠・・縺ｩ縺｡繧峨°窶懈怙蛻昴↓隕九▽縺九▲縺滓婿窶昴∈蜈･繧後ｋ
+  function pickTarget() {
+    var ids = ['id_body','id_content','id_note','id_remark'];
+    for (var i=0;i<ids.length;i++){
+      var el = document.getElementById(ids[i]);
+      if (el) return el;
+    }
+    // name 螻樊ｧ縺ｧ繧よ､懃ｴ｢
+    var names = ['body','content','note','remark'];
+    for (var j=0;j<names.length;j++){
+      var eln = document.querySelector('[name="'+names[j]+'"]');
+      if (eln) return eln;
+    }
+    return null;
+  }
+
+  var target = pickTarget();
+  if (!target) return;
+
+  // 蜆ｪ蜈・ sessionStorage 竊・莉｣譖ｿ: localStorage 縺ｮ譛譁ｰ荳区嶌縺・
+  var text = '';
+  try { text = sessionStorage.getItem('FN_REPORT_PREFILL_TEXT') || ''; } catch(e){}
+  if (!text) {
+    try {
+      var arr = JSON.parse(localStorage.getItem('vl_drafts') || '[]');
+      if (Array.isArray(arr) && arr.length && arr[0].text) {
+        text = String(arr[0].text || '').trim();
+      }
+    } catch(e){}
+  }
+
+  if (text) {
+    target.value = text;
+    // 繝輔か繝ｼ繝縺ｮ繝舌Μ繝・・繧ｷ繝ｧ繝ｳ/繝励Ξ繝薙Η繝ｼ騾｣蜍募髄縺代↓繧､繝吶Φ繝育匱轣ｫ
+    try {
+      target.dispatchEvent(new Event('input', { bubbles:true }));
+      target.dispatchEvent(new Event('change', { bubbles:true }));
+    } catch(e){}
+  }
+})();
+</script>
+<!-- 笆ｲ笆ｲ 霑ｽ蜉縺薙％縺ｾ縺ｧ 笆ｲ笆ｲ -->
+
+{% endblock %}
+

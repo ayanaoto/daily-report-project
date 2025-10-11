@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}譁ｰ隕上い繧ｫ繧ｦ繝ｳ繝育匳骭ｲ{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card bg-dark text-white">
+        <div class="card-header text-center">
+          <h2 class="m-0">譁ｰ隕上い繧ｫ繧ｦ繝ｳ繝育匳骭ｲ</h2>
+        </div>
+        <div class="card-body">
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for e in form.non_field_errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+            </div>
+          {% endif %}
+          <form method="post">
+            {% csrf_token %}
+            {% for field in form %}
+              <div class="mb-3">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field.as_widget|safe }}
+                {% if field.help_text %}
+                  <div class="form-text text-white-50">{{ field.help_text|safe }}</div>
+                {% endif %}
+                {% for error in field.errors %}
+                  <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endfor %}
+            <div class="d-grid">
+              <button type="submit" class="btn btn-primary">逋ｻ骭ｲ縺吶ｋ</button>
+            </div>
+          </form>
+          <div class="mt-3">
+            <a href="{% url 'login' %}">繝ｭ繧ｰ繧､繝ｳ縺ｸ謌ｻ繧・/a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

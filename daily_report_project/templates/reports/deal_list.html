@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}譯井ｻｶ荳隕ｧ{% endblock %}
+
+{% block content %}
+    <h1>譯井ｻｶ荳隕ｧ</h1>
+    <hr>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>譯井ｻｶ蜷・/th>
+                <th>鬘ｧ螳｢</th>
+                <th>驥鷹｡・/th>
+                <th>繧ｹ繝・・繧ｿ繧ｹ</th>
+                <th>蜿玲ｳｨ莠亥ｮ壽律</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for deal in deals %}
+            <tr>
+                <td>{{ deal.deal_name }}</td>
+                <td>{{ deal.customer.company_name }}</td>
+                <td>{{ deal.amount }}</td>
+                <td>{{ deal.get_status_display }}</td>
+                <td>{{ deal.close_date }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">縺ｾ縺譯井ｻｶ縺ｯ逋ｻ骭ｲ縺輔ｌ縺ｦ縺・∪縺帙ｓ縲・/td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
+

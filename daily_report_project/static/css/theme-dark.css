@@ -1,0 +1,121 @@
+/* =========================================================
+   FieldNote 共通テーマ（入力欄を見やすく）
+   - 開始日 / 終了日 / キーワード などの “中身” をクッキリ
+   - フォーカス/オートフィル時に暗くならない・色が変わらない
+   - セレクトの高さも統一
+   ========================================================= */
+
+/* ベース：Bootstrap の form-control を上書きしても崩れにくい設計 */
+.fn-input,
+input[name="start"],
+input[name="end"],
+input[name="q"],
+#id_start,
+#id_end,
+#id_q {
+  font-size: 18px;                 /* 読みやすく */
+  line-height: 1.6;
+  font-weight: 600;                /* 少し太字で視認性UP */
+  color: #0b0f14 !important;       /* くっきり黒文字 */
+  background: #ffffff !important;  /* 常に白背景 */
+  border: 2px solid #6b7785 !important;   /* 少し太めの枠 */
+  border-radius: .5rem;
+  padding: .55rem .9rem;           /* 余白を十分に */
+  height: 46px;                    /* 高さを統一 */
+  box-shadow: none !important;     /* 余計な影は消す */
+  -webkit-text-size-adjust: 100%;
+}
+
+/* プレースホルダーも薄すぎない色で */
+.fn-input::placeholder,
+input[name="start"]::placeholder,
+input[name="end"]::placeholder,
+input[name="q"]::placeholder,
+#id_start::placeholder,
+#id_end::placeholder,
+#id_q::placeholder {
+  color: #3a4652 !important;       /* はっきりめグレー */
+  opacity: 1;
+}
+
+/* フォーカス時：背景は白のまま、青いフォーカスリングで明確に */
+.fn-input:focus,
+input[name="start"]:focus,
+input[name="end"]:focus,
+input[name="q"]:focus,
+#id_start:focus,
+#id_end:focus,
+#id_q:focus {
+  color: #0b0f14 !important;
+  background: #ffffff !important;
+  border-color: #0a58ca !important;                 /* はっきり青 */
+  box-shadow: 0 0 0 3px rgba(13,110,253,.18) !important; /* 外側に淡い青 */
+  outline: none;
+}
+
+/* ホバー時：枠だけ少し濃く */
+.fn-input:hover,
+input[name="start"]:hover,
+input[name="end"]:hover,
+input[name="q"]:hover,
+#id_start:hover,
+#id_end:hover,
+#id_q:hover {
+  border-color: #556171 !important;
+}
+
+/* カレンダーアイコン（白背景に合わせる） */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: none;
+  opacity: .85;
+}
+input[type="date"]:hover::-webkit-calendar-picker-indicator { opacity: 1; }
+
+/* オートフィル（Chrome 等）で背景や文字色が変わらないよう固定 */
+.fn-input:-webkit-autofill,
+input[name="start"]:-webkit-autofill,
+input[name="end"]:-webkit-autofill,
+input[name="q"]:-webkit-autofill,
+#id_start:-webkit-autofill,
+#id_end:-webkit-autofill,
+#id_q:-webkit-autofill {
+  -webkit-text-fill-color: #0b0f14 !important;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  transition: background-color 9999s ease-in-out 0s; /* ちらつき防止 */
+}
+
+/* セレクトの見やすさ・高さを統一 */
+.fn-select,
+select[name="sort"],
+select[name="per_page"] {
+  height: 46px;
+  padding: .45rem .9rem;
+  font-size: 16px;
+  color: #0b0f14 !important;
+  background: #ffffff !important;
+  border: 2px solid #6b7785 !important;
+  border-radius: .5rem;
+  box-shadow: none !important;
+}
+.fn-select:focus,
+select[name="sort"]:focus,
+select[name="per_page"]:focus {
+  border-color: #0a58ca !important;
+  box-shadow: 0 0 0 3px rgba(13,110,253,.18) !important;
+  outline: none;
+}
+
+/* ボタン類の間隔（フォーム下のボタン整列用） */
+.fn-actions { gap: .5rem; }
+
+/* モバイル最適化 */
+@media (max-width: 576px) {
+  .fn-input,
+  #id_start, #id_end, #id_q,
+  input[name="start"], input[name="end"], input[name="q"],
+  .fn-select, select[name="sort"], select[name="per_page"] {
+    font-size: 16px;
+    height: 44px;
+  }
+}

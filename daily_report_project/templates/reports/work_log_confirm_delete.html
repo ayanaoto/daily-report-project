@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}繝繝・す繝･繝懊・繝閲% endblock %}
+
+{% block page_title %}繝繝・す繝･繝懊・繝閲% endblock %}
+
+{% block content %}
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        繝ｦ繝ｼ繧ｶ繝ｼ蛻･縺ｮ繝ｬ繝昴・繝井ｻｶ謨ｰ
+      </div>
+      <div class="card-body">
+        <canvas id="userReportChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card">
+      <div class="card-header">
+        縺ゅ↑縺溘・騾ｲ謐礼憾豕・
+      </div>
+      <div class="card-body">
+        <canvas id="progressChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        蝣ｴ謇縺斐→縺ｮ蜷郁ｨ井ｽ懈･ｭ譎る俣
+      </div>
+      <div class="card-body">
+        <canvas id="hoursChart"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# Chart.js繝ｩ繧､繝悶Λ繝ｪ縺ｮ隱ｭ縺ｿ霎ｼ縺ｿ #}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+{# Django縺ｮ繝・・繧ｿ繧谷avaScript縺ｫ貂｡縺・#}
+{{ user_chart_labels|json_script:"user-chart-labels" }}
+{{ user_chart_data|json_script:"user-chart-data" }}
+{{ progress_chart_labels|json_script:"progress-chart-labels" }}
+{{ progress_chart_data|json_script:"progress-chart-data" }}
+{{ location_chart_labels|json_script:"location-chart-labels" }}
+{{ location_chart_data|json_script:"location-chart-data" }}
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // --- 蜈ｱ騾壹・繧ｰ繝ｩ繝戊ｨｭ螳・---
+  const textColor = '#E5E7EB'; // 譁・ｭ苓牡
+  const gridColor = 'rgba(229, 231, 235, 0.2)'; // 繧ｰ繝ｩ繝輔・陬懷勧邱壹・濶ｲ
+
+  // --- 繧ｰ繝ｩ繝・縺ｮ謠冗判 ---
+  const userLabels = JSON.parse(document.getElementById('user-chart-labels').textContent);
+  const userData = JSON.parse(document.getElementById('user-chart-data').textContent);
+  const userCtx = document.getElementById('userReportChart').getContext('2d');
+  new Chart(userCtx, {
+    type: 'bar',
+    data: {
+      labels: userLabels,
+      datasets: [{
+        label: '繝ｬ繝昴・繝井ｻｶ謨ｰ',
+        data: userData,
+        backgroundColor: 'rgba(56, 189, 248, 0.5)',
+        borderColor: 'rgba(56, 189, 248, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      plugins: { legend: { labels: { color: textColor } } },
+      scales: {
+        y: { 
+          beginAtZero: true, 
+          ticks: { color: textColor, stepSize: 1 },
+          grid: { color: gridColor }
+        },
+        x: {
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        }
+      }
+    }
+  });
+
+  // --- 繧ｰ繝ｩ繝・縺ｮ謠冗判 ---
+  const progressLabels = JSON.parse(document.getElementById('progress-chart-labels').textContent);
+  const progressData = JSON.parse(document.getElementById('progress-chart-data').textContent);
+  const progressCtx = document.getElementById('progressChart').getContext('2d');
+  new Chart(progressCtx, {
+    type: 'doughnut',
+    data: {
+      labels: progressLabels,
+      datasets: [{
+        label: '莉ｶ謨ｰ',
+        data: progressData,
+        backgroundColor: [
+          'rgba(239, 68, 68, 0.6)',
+          'rgba(56, 189, 248, 0.6)',
+          'rgba(16, 185, 129, 0.6)'
+        ],
+        borderColor: [
+          '#EF4444',
+          '#38BDF8',
+          '#10B981'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      plugins: { legend: { labels: { color: textColor } } }
+    }
+  });
+
+  // --- 繧ｰ繝ｩ繝・縺ｮ謠冗判 ---
+  const locationLabels = JSON.parse(document.getElementById('location-chart-labels').textContent);
+  const locationData = JSON.parse(document.getElementById('location-chart-data').textContent);
+  const hoursCtx = document.getElementById('hoursChart').getContext('2d');
+  new Chart(hoursCtx, {
+    type: 'bar',
+    data: {
+      labels: locationLabels,
+      datasets: [{
+        label: '蜷郁ｨ井ｽ懈･ｭ譎る俣 (譎る俣)',
+        data: locationData,
+        backgroundColor: 'rgba(16, 185, 129, 0.5)',
+        borderColor: 'rgba(16, 185, 129, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      indexAxis: 'y', // 讓ｪ譽偵げ繝ｩ繝輔↓縺吶ｋ
+      plugins: { legend: { labels: { color: textColor } } },
+      scales: {
+        x: { 
+          beginAtZero: true,
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        },
+        y: {
+          ticks: { color: textColor },
+          grid: { color: gridColor }
+        }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}鬘ｧ螳｢荳隕ｧ{% endblock %}
+
+{% block content %}
+    <h1>鬘ｧ螳｢荳隕ｧ</h1>
+    <hr>
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th>莨夂､ｾ蜷・/th>
+                <th>諡・ｽ楢・錐</th>
+                <th>髮ｻ隧ｱ逡ｪ蜿ｷ</th>
+                <th>繝｡繝ｼ繝ｫ繧｢繝峨Ξ繧ｹ</th>
+                <th>逋ｻ骭ｲ譌･</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for customer in customers %}
+            <tr>
+                <td><a href="{% url 'customer_detail' customer.pk %}">{{ customer.company_name }}</a></td>
+                <td>{{ customer.contact_person }}</td>
+                <td>{{ customer.phone_number }}</td>
+                <td>{{ customer.email_address }}</td>
+                <td>{{ customer.created_at }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5">縺ｾ縺鬘ｧ螳｢縺ｯ逋ｻ骭ｲ縺輔ｌ縺ｦ縺・∪縺帙ｓ縲・/td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

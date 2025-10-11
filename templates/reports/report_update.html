@@ -10,28 +10,20 @@
                 <h1>日報の編集</h1>
             </div>
             <div class="card-body">
-                <form method="post">
+                <form method="post" enctype="multipart/form-data">
                     {% csrf_token %}
-                    {% for field in form %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {{ field }}
+                    {{ form.as_p }}
+                    {{ att_formset.management_form }}
+                    {% for form in att_formset %}
+                        <div class="mb-3 border p-3 rounded">
+                            {{ form.as_p }}
                         </div>
                     {% endfor %}
                     <button type="submit" class="btn btn-primary">更新する</button>
-                    <a href="{{ report.get_absolute_url }}" class="btn btn-secondary">キャンセル</a>
+                    <a href="{% url 'reports:report_detail' object.pk %}" class="btn btn-secondary">キャンセル</a>
                 </form>
             </div>
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        new TomSelect('#id_customer',{ create: false });
-        new TomSelect('#id_deal',{ create: false });
-    });
-</script>
 {% endblock %}

@@ -1,0 +1,76 @@
+{# templates/reports/todo_list.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}蠢・ｦ∫黄蜩・ｼ・oDo繝ｻ2蛻暦ｼ閲% endblock %}
+
+{% block content %}
+<div class="card shadow-soft">
+  <div class="card-header">蠢・ｦ∫黄蜩√Μ繧ｹ繝・/div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-striped mb-0" id="todoTable">
+        <thead>
+          <tr>
+            <th style="width: 180px;">謚慕ｨｿ譌･</th>
+            <th>蠢・ｦ√↑繧ゅ・</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if todos %}
+            {% for t in todos %}
+              <tr>
+                <td class="text-nowrap">
+                  {% if t.created_at %}
+                    {{ t.created_at|date:"Y-m-d H:i" }}
+                  {% elif t.updated_at %}
+                    {{ t.updated_at|date:"Y-m-d H:i" }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </td>
+                <td>
+                  <strong>
+                    {# 蜩∫岼蜷搾ｼ亥ｭ伜惠縺吶ｋ蛟呵｣懊°繧峨ヵ繧ｩ繝ｼ繝ｫ繝舌ャ繧ｯ・・#}
+                    {% if t.name %}{{ t.name }}
+                    {% elif t.title %}{{ t.title }}
+                    {% elif t.subject %}{{ t.subject }}
+                    {% else %}(蜷咲ｧｰ譛ｪ險ｭ螳・{% endif %}
+                  </strong>
+                  {# 謨ｰ驥上・蜊倅ｽ搾ｼ亥ｭ伜惠譎ゅ・縺ｿ・・#}
+                  {% if t.quantity %} ﾃ・{{ t.quantity|floatformat:-2 }}{% endif %}
+                  {% if t.unit %} {{ t.unit }}{% endif %}
+
+                  {# 陬懆ｶｳ・井ｻｻ諢擾ｼ壹Γ繝｢/蛯呵・隱ｬ譏趣ｼ・#}
+                  {% if t.memo or t.note or t.remarks or t.description %}
+                    <div class="text-muted small mt-1">
+                      {{ t.memo|default:t.note|default:t.remarks|default:t.description }}
+                    </div>
+                  {% endif %}
+
+                  {# 蜈・Ξ繝昴・繝医∈繝ｪ繝ｳ繧ｯ・亥ｭ伜惠縺吶ｋ蝣ｴ蜷医・縺ｿ縲６RL蜷阪・迺ｰ蠅・↓蜷医ｏ縺帙※・・#}
+                  {% if t.source_report_id or t.report_id %}
+                    <div class="mt-1">
+                      {# reports:report_detail 縺後≠繧句ｴ蜷医□縺第怏蜉ｹ蛹・#}
+                      {# <a class="small" href="{% url 'reports:report_detail' t.source_report_id|default:t.report_id %}">
+                           蜃ｺ蜈ｸ: 譌･蝣ｱ #{{ t.source_report_id|default:t.report_id }}
+                         </a> #}
+                      <span class="small text-muted">蜃ｺ蜈ｸ: 譌･蝣ｱ #{{ t.source_report_id|default:t.report_id }}</span>
+                    </div>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="2" class="text-center">
+                隧ｲ蠖薙☆繧九Ξ繧ｳ繝ｼ繝峨・縺ゅｊ縺ｾ縺帙ｓ縲・
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

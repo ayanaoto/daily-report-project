@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}菴懈･ｭ譌･蝣ｱ 隧ｳ邏ｰ{% endblock %}
+
+{% block content %}
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">菴懈･ｭ譌･蝣ｱ: {{ work_log.work_date }}</h1>
+        </div>
+        <div class="card-body">
+            <p><strong>諡・ｽ楢・</strong> {{ work_log.author.username }}</p>
+            <p><strong>騾ｲ謐・</strong> <span class="badge bg-primary">{{ work_log.get_progress_status_display }}</span></p>
+            <p><strong>繧ｨ繝ｪ繧｢:</strong> {{ work_log.area }}</p>
+            <p><strong>蝣ｴ謇:</strong> {{ work_log.location }}</p>
+            <p><strong>菴懈･ｭ遞ｮ蛻･:</strong> {{ work_log.work_type }}</p>
+            <p><strong>菴懈･ｭ譎る俣:</strong> {{ work_log.work_hours }}</p>
+            <hr>
+            <h5>菴懈･ｭ蜀・ｮｹ</h5>
+            <p>{{ work_log.content|linebreaks }}</p>
+            <h5>菫ｮ郢募ｿ・ｦ∫ｮ・園</h5>
+            <p>{{ work_log.repair_needed|linebreaks }}</p>
+            <h5>蛯呵・/h5>
+            <p>{{ work_log.remarks|linebreaks }}</p>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'work_log_update' work_log.pk %}" class="btn btn-primary">邱ｨ髮・☆繧・/a>
+            <a href="{% url 'work_log_delete' work_log.pk %}" class="btn btn-danger">蜑企勁縺吶ｋ</a>
+            <a href="{% url 'work_log_list' %}" class="btn btn-secondary">荳隕ｧ縺ｫ謌ｻ繧・/a>
+        </div>
+    </div>
+{% endblock %}

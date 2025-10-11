@@ -1,7 +1,6 @@
-{# templates/reports/todo_form.html #}
 {% extends "base.html" %}
 
-{% block title %}ToDo{{ object.pk|default:"新規" }} | {{ site_brand|default:"FieldNote" }}{% endblock %}
+{% block title %}ToDo{% if not object %}新規{% else %}編集{% endif %}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -10,69 +9,21 @@
       <div class="card shadow-sm">
         <div class="card-body">
           <h1 class="h4 mb-3">
-            {% if object %}ToDo編集{% else %}ToDo追加{% endif %}
+            {% if not object %}ToDo追加{% else %}ToDo編集{% endif %}
           </h1>
 
-          {# 全体エラー #}
           {% if form.non_field_errors %}
             <div class="alert alert-danger">
-              {% for e in form.non_field_errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+              {% for e in form.non_field_errors %}{{ e }}{% endfor %}
             </div>
           {% endif %}
 
           <form method="post">
             {% csrf_token %}
-
-            <div class="mb-3">
-              <label class="form-label" for="{{ form.title.id_for_label }}">タイトル</label>
-              {{ form.title }}
-              {% for e in form.title.errors %}
-                <div class="invalid-feedback d-block">{{ e }}</div>
-              {% endfor %}
-            </div>
-
-            <div class="row g-3">
-              <div class="col-md-4">
-                <label class="form-label" for="{{ form.priority.id_for_label }}">優先度</label>
-                {{ form.priority }}
-                {% for e in form.priority.errors %}
-                  <div class="invalid-feedback d-block">{{ e }}</div>
-                {% endfor %}
-              </div>
-              <div class="col-md-4">
-                <label class="form-label" for="{{ form.status.id_for_label }}">状態</label>
-                {{ form.status }}
-                {% for e in form.status.errors %}
-                  <div class="invalid-feedback d-block">{{ e }}</div>
-                {% endfor %}
-              </div>
-              <div class="col-md-4">
-                <label class="form-label" for="{{ form.due_date.id_for_label }}">期限</label>
-                {{ form.due_date }}
-                {% for e in form.due_date.errors %}
-                  <div class="invalid-feedback d-block">{{ e }}</div>
-                {% endfor %}
-              </div>
-            </div>
-
-            <div class="form-check my-3">
-              {{ form.is_done }} <label class="form-check-label" for="{{ form.is_done.id_for_label }}">完了</label>
-              {% for e in form.is_done.errors %}
-                <div class="invalid-feedback d-block">{{ e }}</div>
-              {% endfor %}
-            </div>
-
-            <div class="mb-3">
-              <label class="form-label" for="{{ form.memo.id_for_label }}">メモ</label>
-              {{ form.memo }}
-              {% for e in form.memo.errors %}
-                <div class="invalid-feedback d-block">{{ e }}</div>
-              {% endfor %}
-            </div>
-
-            <div class="d-flex gap-2">
+            {{ form.as_p }}
+            <div class="d-flex gap-2 mt-3">
               <button class="btn btn-primary" type="submit">保存</button>
-              <a class="btn btn-outline-light" href="{% url 'reports:todo_list' %}">戻る</a>
+              <a class="btn btn-secondary" href="{% url 'reports:todo_list' %}">戻る</a>
             </div>
           </form>
 

@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}繝ｬ繝昴・繝井ｸ隕ｧ{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+  <h1 class="mb-4 fw-bold">繝ｬ繝昴・繝井ｸ隕ｧ</h1>
+
+  <!-- 讀懃ｴ｢繝輔か繝ｼ繝 -->
+  <form method="get" class="row g-3 align-items-end mb-3">
+    <div class="col-12 col-sm-6 col-md-3">
+      <label class="form-label">髢句ｧ区律</label>
+      <input type="date" name="start" value="{{ request.GET.start }}" class="form-control fn-input" placeholder="蟷ｴ / 譛・/ 譌･">
+    </div>
+
+    <div class="col-12 col-sm-6 col-md-3">
+      <label class="form-label">邨ゆｺ・律</label>
+      <input type="date" name="end" value="{{ request.GET.end }}" class="form-control fn-input" placeholder="蟷ｴ / 譛・/ 譌･">
+    </div>
+
+    <div class="col-12 col-md-4">
+      <label class="form-label">繧ｭ繝ｼ繝ｯ繝ｼ繝・/label>
+      <input type="text" name="q" value="{{ request.GET.q }}" class="form-control fn-input" placeholder="鬘ｧ螳｢繝ｻ莉ｶ蜷阪・譛ｬ譁・↑縺ｩ">
+    </div>
+
+    <div class="col-6 col-md-2">
+      <label class="form-label">荳ｦ縺ｳ</label>
+      <select name="sort" class="form-select fn-select">
+        <option value="-created" {% if request.GET.sort == "-created" or not request.GET.sort %}selected{% endif %}>譁ｰ縺励＞鬆・/option>
+        <option value="created"  {% if request.GET.sort == "created" %}selected{% endif %}>蜿､縺・・/option>
+        <option value="-id"      {% if request.GET.sort == "-id" %}selected{% endif %}>ID髯埼・/option>
+        <option value="id"       {% if request.GET.sort == "id" %}selected{% endif %}>ID譏・・/option>
+        <option value="author"   {% if request.GET.sort == "author" %}selected{% endif %}>諡・ｽ楢・竊短</option>
+        <option value="-author"  {% if request.GET.sort == "-author" %}selected{% endif %}>諡・ｽ楢・竊但</option>
+      </select>
+    </div>
+
+    <div class="col-6 col-md-2">
+      <label class="form-label">莉ｶ謨ｰ/鬆・/label>
+      <select name="per_page" class="form-select fn-select">
+        <option value="10" {% if request.GET.per_page == "10" or not request.GET.per_page %}selected{% endif %}>10</option>
+        <option value="20" {% if request.GET.per_page == "20" %}selected{% endif %}>20</option>
+        <option value="50" {% if request.GET.per_page == "50" %}selected{% endif %}>50</option>
+        <option value="100" {% if request.GET.per_page == "100" %}selected{% endif %}>100</option>
+      </select>
+    </div>
+
+    <div class="col-12 d-flex fn-actions flex-wrap">
+      <button class="btn btn-primary">邨槭ｊ霎ｼ縺ｿ</button>
+      <a class="btn btn-outline-secondary" href="{% url 'reports:report_list' %}">繝ｪ繧ｻ繝・ヨ</a>
+      <a class="btn btn-outline-info" href="{% url 'reports:report_export_csv' %}?{{ request.GET.urlencode }}">CSV</a>
+      <a class="btn btn-success ms-auto" href="{% url 'reports:report_create' %}">・・譁ｰ隕丈ｽ懈・</a>
+      <a class="btn btn-outline-dark ms-2" href="{% url 'reports:dashboard' %}">投 繝繝・す繝･繝懊・繝峨∈</a>
+    </div>
+  </form>
+
+  {% if reports %}
+    <div class="table-responsive">
+      <table class="table table-dark table-striped align-middle">
+        <thead>
+          <tr>
+            <th style="width: 6rem;">ID</th>
+            <th style="width: 14rem;">菴懈・譌･譎・/th>
+            <th>繧ｿ繧､繝医Ν / 譛ｬ譁・/th>
+            <th style="width: 10rem;">諡・ｽ楢・/th>
+            <th style="width: 8rem;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in reports %}
+            <tr>
+              <td>#{{ r.id }}</td>
+              <td>
+                {% if r.created_at %}{{ r.created_at|date:"Y-m-d H:i" }}
+                {% elif r.date %}{{ r.date|date:"Y-m-d" }}
+                {% elif r.report_date %}{{ r.report_date|date:"Y-m-d" }}
+                {% else %}-{% endif %}
+              </td>
+              <td>
+                <div class="fw-semibold">
+                  {% if r.title %}{{ r.title }}{% else %}(辟｡鬘・{% endif %}
+                  {% if r.location %}<span class="text-secondary ms-2">窶・{{ r.location }}</span>{% endif %}
+                </div>
+                {% if r.content %}
+                  <div class="text-secondary small text-truncate" style="max-width: 70ch;">
+                    {{ r.content|striptags }}
+                  </div>
+                {% endif %}
+              </td>
+              <td>
+                {% if r.author %}{{ r.author }}{% else %}-{% endif %}
+              </td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-light" href="{% url 'reports:report_detail' r.pk %}">隧ｳ邏ｰ</a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if is_paginated %}
+      <nav class="mt-3" aria-label="Page navigation">
+        <ul class="pagination">
+          {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">ﾂｫ</a></li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">ﾂｫ</span></li>
+          {% endif %}
+
+          <li class="page-item disabled">
+            <span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+          </li>
+
+          {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">ﾂｻ</a></li>
+          {% else %}
+            <li class="page-item disabled"><span class="page-link">ﾂｻ</span></li>
+          {% endif %}
+        </ul>
+      </nav>
+    {% endif %}
+  {% else %}
+    <div class="alert alert-info">隧ｲ蠖薙☆繧九Ξ繝昴・繝医′縺ゅｊ縺ｾ縺帙ｓ縲・/div>
+  {% endif %}
+</div>
+{% endblock %}
+

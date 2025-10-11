@@ -8,7 +8,7 @@
             <h1 class="card-title">作業日報: {{ work_log.work_date }}</h1>
         </div>
         <div class="card-body">
-            <p><strong>担当者:</strong> {{ work_log.author.username }}</p>
+            <p><strong>報告者:</strong> {{ work_log.author.username }}</p>
             <p><strong>進捗:</strong> <span class="badge bg-primary">{{ work_log.get_progress_status_display }}</span></p>
             <p><strong>エリア:</strong> {{ work_log.area }}</p>
             <p><strong>場所:</strong> {{ work_log.location }}</p>
@@ -17,7 +17,7 @@
             <hr>
             <h5>作業内容</h5>
             <p>{{ work_log.content|linebreaks }}</p>
-            <h5>修繕必要箇所</h5>
+            <h5>修理・交換部品</h5>
             <p>{{ work_log.repair_needed|linebreaks }}</p>
             <h5>備考</h5>
             <p>{{ work_log.remarks|linebreaks }}</p>

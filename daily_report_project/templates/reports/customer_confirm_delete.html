@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block title %}鬘ｧ螳｢縺ｮ蜑企勁{% endblock %}
+
+{% block content %}
+    <h1>鬘ｧ螳｢縺ｮ蜑企勁</h1>
+    <hr>
+    <div class="alert alert-danger">
+        <p>譛ｬ蠖薙↓縲鶏{ customer.company_name }}縲阪ｒ蜑企勁縺励∪縺吶°・・/p>
+        <p>縺薙・謫堺ｽ懊・蜈・↓謌ｻ縺帙∪縺帙ｓ縲・/p>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">縺ｯ縺・∝炎髯､縺励∪縺・/button>
+        <a href="{% url 'customer_detail' customer.pk %}" class="btn btn-secondary">縺・＞縺医√く繝｣繝ｳ繧ｻ繝ｫ縺励∪縺・/a>
+    </form>
+{% endblock %}

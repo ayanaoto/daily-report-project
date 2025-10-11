@@ -12,7 +12,7 @@
     {% for log in work_logs %}
         <a href="{% url 'work_log_detail' log.pk %}" class="card mb-3 text-decoration-none text-dark">
             <div class="card-header">
-                <strong>担当者:</strong> {{ log.author.username }}
+                <strong>報告者:</strong> {{ log.author.username }}
                 <span class="badge bg-primary float-end ms-2">{{ log.get_progress_status_display }}</span>
                 <small class="text-muted float-end">作業日: {{ log.work_date }}</small>
             </div>

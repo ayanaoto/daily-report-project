@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}菴懈･ｭ譌･蝣ｱ縺ｮ謚慕ｨｿ{% endblock %}
+
+{% block content %}
+    <h1>菴懈･ｭ譌･蝣ｱ縺ｮ謚慕ｨｿ</h1>
+    <hr>
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success">謚慕ｨｿ縺吶ｋ</button>
+        <a href="{% url 'work_log_list' %}" class="btn btn-secondary">繧ｭ繝｣繝ｳ繧ｻ繝ｫ</a>
+    </form>
+{% endblock %}

@@ -1,0 +1,481 @@
+{# reports/templates/reports/voice_logger.html #}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Voice Logger{% endblock %}
+
+{% block content %}
+<style>
+  /* =========================
+     Voice Logger 窶・High Contrast (濶ｲ縺縺大ｼｷ蛹・
+     讒矩繝ｻ讖溯・縺ｯ螟画峩縺ｪ縺・
+  ========================== */
+
+  /* 蜈･蜉帶ｬ・ｼ夂區蝨ｰ + 豼・枚蟄・+ 2px譫縺ｧ縺上▲縺阪ｊ */
+  #vl-textarea.form-control{
+    background:#ffffff !important;
+    color:#0b0f14 !important;
+    border:2px solid #334155 !important;
+  }
+  #vl-textarea::placeholder{ color:#4b5563 !important; }
+  #vl-textarea:focus{
+    outline:0;
+    border-color:#0f3f5c !important;
+    box-shadow:0 0 0 .2rem rgba(15,63,92,.2);
+  }
+
+  /* 繝励Ξ繝薙Η繝ｼ・夂區蝨ｰ + 豼・枚蟄・+ 螳溽ｷ・px */
+  #vl-preview{
+    white-space: pre-wrap;
+    background:#ffffff;
+    color:#0b0f14;
+    border:2px solid #334155;
+    border-radius:6px;
+    padding:.6rem .8rem;
+  }
+
+  /* 繝ｩ繝吶Ν繧・ｦ句・縺励・譁・ｭ励ｒ豼・牡縺ｫ */
+  h1, .card .form-label, .text-secondary{ color:#0f172a !important; }
+
+  /* 荳区嶌縺阪ユ繝ｼ繝悶Ν・壹さ繝ｳ繝医Λ繧ｹ繝・P */
+  #tblDrafts { table-layout: fixed; }
+  #tblDrafts th, #tblDrafts td { vertical-align: middle; }
+  #tblDrafts thead th  { position:sticky; top:0; background:#2a6078 !important; color:#fff !important; z-index:1; }
+  #tblDrafts tbody td  { border-top:1.5px solid #cbd5e1 !important; }
+  #tblDrafts tbody tr:hover { background:#f2f8fc !important; }
+
+  #tblDrafts .col-id   { width: 220px; background:#f8fbfd; border-right:1px solid #e6e6e6; }
+  #tblDrafts .col-ts   { width: 180px; white-space: nowrap; }
+  #tblDrafts .col-ops  { width: 240px; white-space: nowrap; }
+  #tblDrafts .col-text { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:#0b0f14; }
+
+  /* 繝ｭ繝ｼ繧ｫ繝ｫID縺ｮ隕九ｄ縺吶＆ */
+  .id-wrap { display:flex; align-items:center; gap:.5rem; }
+  .id-chip {
+    flex:1 1 auto; min-width:0;
+    font: 600 .92rem ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    color:#0b0f14; background:#eef6fb; border:2px solid #9ec9df;
+    border-radius:9px; padding:6px 8px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .id-copy {
+    flex:0 0 auto; padding:3px 6px; font-size:.8rem;
+    border:2px solid #9ec9df; background:#ffffff; color:#0b0f14; border-radius:7px;
+    cursor:pointer;
+  }
+  .id-copy:hover { background:#f3f9fc; }
+
+  /* 繧ｹ繝槭・陦ｨ遉ｺ縺ｮ菫ｮ豁｣ */
+  @media (max-width: 900px) {
+    #tblDrafts thead { display: none; } /* 繧ｹ繝槭・縺ｧ縺ｯ繝倥ャ繝繝ｼ繧帝撼陦ｨ遉ｺ */
+    #tblDrafts tr, #tblDrafts td { display: block; width: 100% !important; border:0 !important; }
+    #tblDrafts tr { border-top: 2px solid #2a6078; padding-bottom: 1rem; }
+    #tblDrafts td { padding: .4rem .2rem !important; }
+    #tblDrafts .col-id { background: transparent; }
+    #tblDrafts .col-ts, #tblDrafts .col-ops { white-space: normal; }
+
+    .id-wrap { flex-direction: column; align-items: stretch; gap:.4rem; }
+    .id-copy { width:100%; text-align:center; }
+
+    /* 蜷・そ繝ｫ縺ｮ蜑阪↓繝ｩ繝吶Ν繧定ｿｽ蜉縺励※蛻・°繧翫ｄ縺吶￥縺吶ｋ */
+    #tblDrafts td:before {
+      content: attr(data-label);
+      font-weight: bold;
+      display: block;
+      margin-bottom: .2rem;
+      color: #2a6078;
+    }
+  }
+
+  /* 邁｡譏薙Δ繝ｼ繝繝ｫ・育區蝓ｺ隱ｿ・・*/
+  .vl-modal-mask { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; z-index:1050; }
+  .vl-modal {
+    position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+    width:min(900px, 90vw); max-height:80vh; background:#ffffff; color:#0b0f14;
+    border:1px solid #e6e6e6; border-radius:8px; box-shadow:0 10px 30px rgba(0,0,0,.15);
+    display:flex; flex-direction:column;
+  }
+  .vl-modal header, .vl-modal footer { padding:.5rem .75rem; }
+  .vl-modal header { display:flex; justify-content:space-between; border-bottom:1px solid #e6e6e6; }
+  .vl-modal footer { border-top:1px solid #e6e6e6; text-align:right; }
+  .vl-modal main { padding:.75rem; overflow:auto; }
+  .vl-modal pre { margin:0; background:#f7fafc; color:#0b0f14; border:1px solid #e5edf4; border-radius:6px; padding:.75rem; white-space:pre-wrap; word-break:break-word; }
+
+  /* 繝懊ち繝ｳ・夊牡蜻ｳ縺ｯ邯ｭ謖√＠縺､縺､繧ｳ繝ｳ繝医Λ繧ｹ繝・P */
+  .btn-primary{ background:#1f6f90 !important; border-color:#1f6f90 !important; }
+  .btn-primary:hover{ background:#195c77 !important; border-color:#195c77 !important; }
+  .btn-success{ background:#2b6e3f !important; border-color:#2b6e3f !important; }
+  .btn-success:hover{ background:#225a33 !important; border-color:#225a33 !important; }
+  .btn-outline-secondary{ color:#0f172a !important; border-color:#334155 !important; }
+  .btn-outline-secondary:hover{ background:#e6f2f7 !important; color:#0b0f14 !important; }
+</style>
+
+<div class="container" style="max-width:980px">
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h1 class="mb-0">NeoInfinity Voice Logger</h1>
+    </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <label class="form-label">繝｡繝｢ / 謖・､ｺ・磯浹螢ｰ蛹悶・菫晏ｭ伜ｯｾ雎｡・・/label>
+      <textarea id="vl-textarea" class="form-control" rows="4"
+        placeholder="萓具ｼ陰遉ｾ 10/3 15:00 險ｪ蝠上・莉ｶ縲∬ｳ・侭縺ｯ譛譁ｰ迚・3縺ｧ縲・></textarea>
+
+      <div class="d-flex align-items-center justify-content-between mt-2">
+        <small class="text-secondary"><span id="charCount">0</span> 譁・ｭ・/small>
+        <small class="text-secondary">繧ｯ繝ｪ繝・け= TTS・域枚蟄冷・髻ｳ・・/ 髟ｷ謚ｼ縺・ STT・磯浹螢ｰ竊呈枚蟄暦ｼ・/small>
+      </div>
+
+      <div class="mt-3 d-flex flex-wrap gap-2">
+        <button id="btnSpeak" class="btn btn-primary">隧ｱ縺呻ｼ・TS / 髟ｷ謚ｼ縺励〒STT・・/button>
+        <button id="btnSave"  class="btn btn-success">菫晏ｭ假ｼ医Ο繧ｰ縺ｫ霑ｽ蜉・・/button>
+        <button id="btnClear" class="btn btn-outline-secondary">繧ｯ繝ｪ繧｢</button>
+
+        {# 笘・縺薙％縺縺醍｢ｺ螳溷虚菴懊・縺溘ａ縺ｫ蝗ｺ螳壹け繧ｨ繝ｪ莉倅ｸ・#}
+        <a id="btnToReport" class="btn btn-outline-secondary"
+           href="{% url 'reports:report_create' %}?draft=1&prefill=1" target="_blank">譛譁ｰ荳区嶌縺阪〒譌･蝣ｱ縺ｸ</a>
+      </div>
+
+      <div class="mt-3">
+        <div class="mb-1 text-secondary">繝励Ξ繝薙Η繝ｼ・磯∽ｿ｡縺輔ｌ繧九ユ繧ｭ繧ｹ繝茨ｼ・/div>
+        <div id="vl-preview"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-body">
+      <label class="form-label">蜀咲函</label>
+      <audio id="player" controls preload="none" style="width:100%"></audio>
+      <div id="dlLinkWrap" class="mt-2" style="display:none">
+        <a id="dlLink" download="tts.mp3" class="btn btn-sm btn-outline-secondary">髻ｳ螢ｰ繧偵ム繧ｦ繝ｳ繝ｭ繝ｼ繝・/a>
+        <small class="text-secondary ms-2">・郁・蜍募・逕溘〒縺阪↑縺・腸蠅・髄縺托ｼ・/small>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-3">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <span>繝ｭ繝ｼ繧ｫ繝ｫ荳区嶌縺・/span>
+      <div class="d-flex gap-2">
+        <button id="btnSync"  class="btn btn-sm btn-outline-secondary">譛ｪ騾∽ｿ｡縺ｮ蜷梧悄</button>
+        <button id="btnPurge" class="btn btn-sm btn-outline-danger">蜈ｨ蜑企勁</button>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-striped mb-0" id="tblDrafts">
+          <thead>
+            <tr>
+              <th class="col-id">繝ｭ繝ｼ繧ｫ繝ｫID</th>
+              <th class="col-text">繝・く繧ｹ繝・/th>
+              <th class="col-ts">譌･譎ゑｼ医Ο繝ｼ繧ｫ繝ｫ・・/th>
+              <th class="col-ops">謫堺ｽ・/th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="__cfg" data-token="{{ api_token|default:'devtoken' }}" hidden></div>
+
+<script>
+(() => {
+  const cfgEl = document.getElementById("__cfg");
+  const API_TOKEN = cfgEl?.dataset?.token || "devtoken";
+  const API_URL   = "/api/voice-logs/";
+
+  const elText   = document.getElementById("vl-textarea");
+  const elPrev   = document.getElementById("vl-preview");
+  const elCount  = document.getElementById("charCount");
+  const btnSave  = document.getElementById("btnSave");
+  const btnClear = document.getElementById("btnClear");
+  const btnTTS   = document.getElementById("btnSpeak");
+  const tbody    = document.querySelector("#tblDrafts tbody");
+  const btnSync  = document.getElementById("btnSync");
+  const btnPurge = document.getElementById("btnPurge");
+  const player   = document.getElementById("player");
+  const dlWrap   = document.getElementById("dlLinkWrap");
+  const dlLink   = document.getElementById("dlLink");
+  // 縲瑚ｨｭ螳壹埼未騾｣縺ｮJavaScript螟画焚繧貞炎髯､縺励∪縺励◆
+
+  const alertMsg = (m) => window.alert(m);
+  const genLocalId = () => `L${Date.now()}${Math.random().toString(36).slice(2,8)}`;
+  const genIdem    = () => `ui-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const fmtJST = new Intl.DateTimeFormat("ja-JP", { dateStyle:"medium", timeStyle:"medium", timeZone:"Asia/Tokyo" });
+
+  const LS_DRAFTS = "vl_drafts";
+  function loadDrafts(){ try { return JSON.parse(localStorage.getItem(LS_DRAFTS) || "[]"); } catch { return []; } }
+  function saveDrafts(arr){ localStorage.setItem(LS_DRAFTS, JSON.stringify(arr)); }
+
+  function renderPreview(){
+    const v = elText.value || "";
+    if (elPrev)  elPrev.textContent = v;
+    if (elCount) elCount.textContent = String(v.length);
+  }
+  elText.addEventListener("input", renderPreview);
+  renderPreview();
+
+  function enableSyncButtons(){
+    const arr = loadDrafts();
+    btnSync.disabled  = !arr.some(d => !d.sent);
+    btnPurge.disabled = arr.length === 0;
+  }
+
+  // 繝｢繝ｼ繝繝ｫ・亥・譁・｡ｨ遉ｺ・・
+  function showModal(title, bodyText){
+    const mask = document.createElement("div");
+    mask.className = "vl-modal-mask";
+    mask.innerHTML = `
+      <div class="vl-modal" role="dialog" aria-modal="true">
+        <header>
+          <strong>${title}</strong>
+          <button class="btn btn-sm btn-outline-secondary" data-close>髢峨§繧・/button>
+        </header>
+        <main><pre></pre></main>
+        <footer>
+          <button class="btn btn-sm btn-outline-secondary" data-copy>繧ｳ繝斐・</button>
+          <button class="btn btn-sm btn-primary" data-close>OK</button>
+        </footer>
+      </div>`;
+    document.body.appendChild(mask);
+    mask.style.display = "block";
+    mask.querySelector("pre").textContent = bodyText || "";
+
+    function close(){ mask.remove(); }
+    mask.addEventListener("click", (e)=>{ if(e.target === mask) close(); });
+    mask.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", close));
+    mask.querySelector("[data-copy]").addEventListener("click", async ()=>{
+      try { await navigator.clipboard.writeText(bodyText || ""); alertMsg("繧ｳ繝斐・縺励∪縺励◆"); } catch {}
+    });
+  }
+
+  function renderTable(){
+    const drafts = loadDrafts();
+    enableSyncButtons();
+    tbody.innerHTML = "";
+    if (drafts.length === 0) {
+      const tr = document.createElement("tr");
+      const td = document.createElement("td");
+      td.colSpan = 4; td.className = "text-center text-secondary"; td.textContent = "荳区嶌縺阪・縺ゅｊ縺ｾ縺帙ｓ縲・;
+      tr.appendChild(td); tbody.appendChild(tr); return;
+    }
+    drafts.forEach(d => {
+      const tr = document.createElement("tr");
+
+      const tdId = document.createElement("td");
+      tdId.className = "col-id";
+      tdId.dataset.label = "繝ｭ繝ｼ繧ｫ繝ｫID"; // 繧ｹ繝槭・陦ｨ遉ｺ逕ｨ縺ｮ繝ｩ繝吶Ν
+      tdId.innerHTML = `
+        <div class="id-wrap">
+          <span class="id-chip" title="${d.id}">${d.id}</span>
+          <button class="id-copy" type="button">繧ｳ繝斐・</button>
+        </div>
+      `;
+      tdId.querySelector(".id-copy").addEventListener("click", async () => {
+        try { await navigator.clipboard.writeText(d.id); } catch {}
+      });
+      tr.appendChild(tdId);
+
+      const tdText = document.createElement("td");
+      tdText.className = "col-text";
+      tdText.dataset.label = "繝・く繧ｹ繝・; // 繧ｹ繝槭・陦ｨ遉ｺ逕ｨ縺ｮ繝ｩ繝吶Ν
+      tdText.textContent = d.text;
+      tdText.title = d.text;
+      tdText.style.cursor = "pointer";
+      tdText.addEventListener("click", ()=> showModal("繝・く繧ｹ繝亥・譁・, d.text));
+      tr.appendChild(tdText);
+
+      const tdTs = document.createElement("td");
+      tdTs.className = "col-ts";
+      tdTs.dataset.label = "譌･譎ゑｼ医Ο繝ｼ繧ｫ繝ｫ・・; // 繧ｹ繝槭・陦ｨ遉ｺ逕ｨ縺ｮ繝ｩ繝吶Ν
+      try { tdTs.textContent = fmtJST.format(new Date(d.ts||Date.now())); }
+      catch { tdTs.textContent = d.ts || ""; }
+      tr.appendChild(tdTs);
+
+      const tdOps = document.createElement("td");
+      tdOps.className = "col-ops";
+      tdOps.dataset.label = "謫堺ｽ・; // 繧ｹ繝槭・陦ｨ遉ｺ逕ｨ縺ｮ繝ｩ繝吶Ν
+      tdOps.innerHTML = `
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-outline-primary" data-op="play">笆ｶ 蜀咲函</button>
+          <button class="btn btn-sm btn-outline-success" data-op="send">${d.sent ? "騾∽ｿ｡貂・ : (d.sending ? "騾∽ｿ｡荳ｭ..." : "騾∽ｿ｡")}</button>
+          <button class="btn btn-sm btn-outline-danger" data-op="del">蜑企勁</button>
+        </div>`;
+      const playBtn = tdOps.querySelector('[data-op="play"]');
+      const sendBtn = tdOps.querySelector('[data-op="send"]');
+      const delBtn  = tdOps.querySelector('[data-op="del"]');
+      sendBtn.disabled = !!d.sent || !!d.sending;
+
+      playBtn.addEventListener("click", ()=> playTextTTS(d.text).catch(e=>{
+        console.error(e); alertMsg("蜀咲函縺ｫ螟ｱ謨・ " + (e?.message ?? "unknown"));
+      }));
+      sendBtn.addEventListener("click", ()=> syncOne(d.id));
+      delBtn.addEventListener("click", ()=> removeOne(d.id));
+      tr.appendChild(tdOps);
+
+      tbody.appendChild(tr);
+    });
+  }
+
+  function addLocalDraft(text){
+    const arr = loadDrafts();
+    arr.unshift({ id: genLocalId(), text, ts: Date.now(), sending:false, sent:false });
+    saveDrafts(arr); renderTable();
+  }
+  function markSending(id, sending){
+    const arr = loadDrafts(); const d = arr.find(x=>x.id===id);
+    if (d){ d.sending = sending; saveDrafts(arr); renderTable(); }
+  }
+  function markSent(id){
+    const arr = loadDrafts(); const d = arr.find(x=>x.id===id);
+    if (d){ d.sent = true; d.sending = false; saveDrafts(arr); renderTable(); }
+  }
+  function removeOne(id){
+    saveDrafts(loadDrafts().filter(x=>x.id!==id)); renderTable();
+  }
+
+  async function postToServer(text, idemKey){
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${API_TOKEN}`,
+        "Content-Type": "application/json; charset=utf-8",
+        "Idempotency-Key": idemKey || genIdem(),
+      },
+      body: JSON.stringify({ text, intent: "note" }),
+    });
+    const data = await res.json().catch(()=> ({}));
+    if (!res.ok || !data?.ok) throw new Error(data?.error || `${res.status} ${res.statusText}`);
+    return data.id;
+  }
+  async function syncOne(localId){
+    const arr = loadDrafts(); const item = arr.find(d=>d.id===localId);
+    if (!item || item.sent) return;
+    try { markSending(localId,true); await postToServer(item.text); markSent(localId); }
+    catch(e){ console.error(e); markSending(localId,false); alertMsg("蜷梧悄縺ｫ螟ｱ謨・ "+(e?.message??"unknown")); }
+  }
+  async function syncAll(){
+    const arr = loadDrafts().filter(d=>!d.sent);
+    if (arr.length===0){ alertMsg("譛ｪ騾∽ｿ｡縺ｯ縺ゅｊ縺ｾ縺帙ｓ"); return; }
+    for (const d of arr) { await syncOne(d.id); }
+  }
+
+  async function onSaveClicked(){
+    const text = (elText.value || "").trim();
+    if (!text){ alertMsg("繝・く繧ｹ繝医′遨ｺ縺ｧ縺・); elText.focus(); return; }
+    addLocalDraft(text); elText.value=""; renderPreview();
+    try { await syncAll(); } catch {}
+  }
+
+  async function playTextTTS(text) {
+    const voice  = "ja-JP-NanamiNeural";
+    const style  = "chat";
+    const degree = 1.1;
+    const rate   = "-6%";
+    const pitch  = "+1%";
+    const format = "audio-24khz-48kbitrate-mono-mp3";
+
+    const res = await fetch("/api/tts/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+      body: JSON.stringify({ text, voice, style, styledegree: degree, rate, pitch, format }),
+    });
+    if (!res.ok) {
+      const t = await res.text().catch(()=> "");
+      throw new Error(`${res.status} ${res.statusText}: ${t}`);
+    }
+    const blob = await res.blob();
+    const url  = URL.createObjectURL(blob);
+
+    dlWrap.style.display = "block";
+    dlLink.href = url;
+    dlLink.download = "tts.mp3";
+
+    player.src = url;
+    try { await player.play(); } catch {}
+  }
+
+  async function doTTS(){
+    const text = (elText.value || "").trim();
+    if (!text){ alertMsg("繝・く繧ｹ繝医′遨ｺ縺ｧ縺・); elText.focus(); return; }
+    await playTextTTS(text);
+  }
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  let rec = null, sttCommitted="", sttInterim="";
+  function updateFromSTT(){
+    elText.value = (sttCommitted + (sttInterim ? " " + sttInterim : "")).trim();
+    renderPreview();
+  }
+  if (SpeechRecognition){
+    rec = new SpeechRecognition();
+    rec.lang="ja-JP"; rec.interimResults=true; rec.continuous=false; rec.maxAlternatives=1;
+    rec.onstart = ()=>{ sttCommitted=(elText.value||"").trim(); sttInterim=""; };
+    rec.onresult = (e)=> {
+      for (let i=e.resultIndex;i<e.results.length;i++){
+        const r = e.results[i];
+        if (r.isFinal){ sttCommitted=(sttCommitted+" "+r[0].transcript).trim(); sttInterim=""; }
+        else { sttInterim=r[0].transcript; }
+      }
+      updateFromSTT();
+    };
+    rec.onerror = ()=>{ sttInterim=""; elText.value=sttCommitted; renderPreview(); };
+    rec.onend   = ()=>{ sttInterim=""; elText.value=sttCommitted; renderPreview(); };
+  }
+
+  // 縲瑚ｨｭ螳壹阪・繧ｿ繝ｳ縺ｮ繧､繝吶Φ繝医Μ繧ｹ繝翫・繧貞炎髯､縺励∪縺励◆
+  btnClear.addEventListener("click", ()=>{ elText.value=""; renderPreview(); elText.focus(); });
+  btnSave .addEventListener("click", ()=> onSaveClicked().catch(e=>{console.error(e); alertMsg("菫晏ｭ伜､ｱ謨・ "+(e?.message??"unknown"));}));
+  btnSync .addEventListener("click", ()=> syncAll().catch(e=>{console.error(e); alertMsg("蜷梧悄螟ｱ謨・ "+(e?.message??"unknown"));}));
+  btnPurge.addEventListener("click", ()=>{
+    if (confirm("繝ｭ繝ｼ繧ｫ繝ｫ荳区嶌縺阪ｒ蜈ｨ縺ｦ蜑企勁縺励∪縺吶ゅｈ繧阪＠縺・〒縺吶°・・)){ localStorage.setItem(LS_DRAFTS,"[]"); renderTable(); }
+  });
+
+  if (btnTTS){
+    let timer=null, longPressed=false;
+    const down=()=>{ longPressed=false; timer=setTimeout(()=>{ longPressed=true; if(!rec){alertMsg("縺薙・繝悶Λ繧ｦ繧ｶ縺ｯ髻ｳ螢ｰ蜈･蜉帙↓蟇ｾ蠢懊＠縺ｦ縺・∪縺帙ｓ・・hrome謗ｨ螂ｨ・・); return;} try{rec.start();}catch{} },600); };
+    const up  =()=>{ clearTimeout(timer); if(longPressed){ try{rec && rec.stop && rec.stop();}catch{} } else { doTTS().catch(e=>{console.error(e); alertMsg("TTS螟ｱ謨・ "+(e?.message??"unknown"));}); } };
+    btnTTS.addEventListener("mousedown",down);
+    btnTTS.addEventListener("mouseup",up);
+    btnTTS.addEventListener("mouseleave",up);
+    btnTTS.addEventListener("touchstart",down);
+    btnTTS.addEventListener("touchend",up);
+    btnTTS.addEventListener("touchcancel",up);
+    
+    // 繧ｹ繝槭・縺ｧ縺ｮ髟ｷ謚ｼ縺玲凾縺ｫ縲√ヶ繝ｩ繧ｦ繧ｶ縺ｮ繝・ヵ繧ｩ繝ｫ繝医Γ繝九Η繝ｼ縺瑚｡ｨ遉ｺ縺輔ｌ繧九・繧帝亟縺・
+    btnTTS.addEventListener("contextmenu", (e) => e.preventDefault());
+  }
+
+  renderTable();
+
+  /* 笆ｼ 繧ｯ繝ｪ繝・け譎ゅ↓ sessionStorage 縺ｫ繧ょ・繧後※縺翫￥・亥ｷｦ繧ｯ繝ｪ繝・け驕ｷ遘ｻ縺ｧ繧ょ叉雋ｼ繧贋ｻ倥￠蜿ｯ・・*/
+  (function(){
+    var btn = document.getElementById('btnToReport');
+    if (!btn) return;
+
+    function getLatestText(){
+      var ta = document.getElementById('vl-textarea');
+      if (ta && ta.value && ta.value.trim()) return ta.value.trim();
+      try {
+        var arr = JSON.parse(localStorage.getItem('vl_drafts') || '[]');
+        if (Array.isArray(arr) && arr.length && arr[0].text) return String(arr[0].text).trim();
+      } catch(e){}
+      var td = document.querySelector('#tblDrafts tbody tr td.col-text');
+      if (td && td.textContent) return td.textContent.trim();
+      return '';
+    }
+
+    btn.addEventListener('click', function(){
+      var text = getLatestText();
+      if (!text) { alert('荳区嶌縺阪′隕九▽縺九ｉ縺ｾ縺帙ｓ縺ｧ縺励◆縲ょ・縺ｫ縲御ｿ晏ｭ假ｼ医Ο繧ｰ縺ｫ霑ｽ蜉・峨阪＠縺ｦ縺上□縺輔＞縲・); return; }
+      try { sessionStorage.setItem('FN_REPORT_PREFILL_TEXT', text); } catch(e){}
+      /* href 縺ｯ ?draft=1&prefill=1 繧貞性繧縺溘ａ縲√◎縺ｮ縺ｾ縺ｾ驕ｷ遘ｻ・・arget="_blank"・・*/
+    });
+  })();
+
+})();
+</script>
+{% endblock %}

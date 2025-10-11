@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}報告書の削除確認{% endblock %}
+{% block title %}ナレッジの削除確認{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center">
@@ -10,12 +10,12 @@
                 <h3>削除の確認</h3>
             </div>
             <div class="card-body">
-                <p><strong>「{{ report.title }}」</strong>を本当に削除しますか？</p>
+                <p><strong>「{{ object.title }}」</strong>を完全に削除しますか？</p>
                 <p>この操作は元に戻せません。</p>
                 <form method="post">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-danger">はい、削除します</button>
-                    <a href="{% url 'troubleshooting_detail' report.pk %}" class="btn btn-secondary">キャンセル</a>
+                    <a href="{% url 'reports:troubleshooting_detail' object.pk %}" class="btn btn-secondary">キャンセル</a>
                 </form>
             </div>
         </div>

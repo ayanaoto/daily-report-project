@@ -1,7 +1,7 @@
 {% extends "admin/base.html" %}
 
-{# ヘッダー右上のユーザーリンク部分を上書きする #}
+{# ヘッダー右上のユーザーリンク領域にボタンを追加する #}
 {% block userlinks %}
-    {# "dashboard" への reverse をやめ、存在する URL にする #}
     <a href="{{ site_url|default:'/' }}" class="btn btn-outline-primary btn-sm">メインサイトに戻る</a>
+    {{ block.super }}
 {% endblock %}

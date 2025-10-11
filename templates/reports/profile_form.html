@@ -4,13 +4,13 @@
 <div class="container mt-4">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card bg-dark text-white">
+            <div class="card">
                 <div class="card-header">
                     <h2 class="mb-0">プロフィール編集</h2>
                 </div>
                 <div class="card-body">
                     <h5 class="card-title">背景画像の変更</h5>
-                    <p class="card-text text-white-50">新しい背景画像をアップロードできます。設定しない場合はデフォルトの背景が表示されます。</p>
+                    <p class="card-text text-muted">新しい背景画像をアップロードできます。設定しない場合はデフォルトの背景が表示されます。</p>
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         <div class="mb-3">

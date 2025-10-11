@@ -1,0 +1,85 @@
+{# templates/reports/todo_form.html #}
+{% extends "base.html" %}
+
+{% block title %}ToDo{{ object.pk|default:"譁ｰ隕・ }} | {{ site_brand|default:"FieldNote" }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h1 class="h4 mb-3">
+            {% if object %}ToDo邱ｨ髮・% else %}ToDo霑ｽ蜉{% endif %}
+          </h1>
+
+          {# 蜈ｨ菴薙お繝ｩ繝ｼ #}
+          {% if form.non_field_errors %}
+            <div class="alert alert-danger">
+              {% for e in form.non_field_errors %}{{ e }}{% if not forloop.last %}<br>{% endif %}{% endfor %}
+            </div>
+          {% endif %}
+
+          <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.title.id_for_label }}">繧ｿ繧､繝医Ν</label>
+              {{ form.title }}
+              {% for e in form.title.errors %}
+                <div class="invalid-feedback d-block">{{ e }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label" for="{{ form.priority.id_for_label }}">蜆ｪ蜈亥ｺｦ</label>
+                {{ form.priority }}
+                {% for e in form.priority.errors %}
+                  <div class="invalid-feedback d-block">{{ e }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="{{ form.status.id_for_label }}">迥ｶ諷・/label>
+                {{ form.status }}
+                {% for e in form.status.errors %}
+                  <div class="invalid-feedback d-block">{{ e }}</div>
+                {% endfor %}
+              </div>
+              <div class="col-md-4">
+                <label class="form-label" for="{{ form.due_date.id_for_label }}">譛滄剞</label>
+                {{ form.due_date }}
+                {% for e in form.due_date.errors %}
+                  <div class="invalid-feedback d-block">{{ e }}</div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="form-check my-3">
+              {{ form.is_done }} <label class="form-check-label" for="{{ form.is_done.id_for_label }}">螳御ｺ・/label>
+              {% for e in form.is_done.errors %}
+                <div class="invalid-feedback d-block">{{ e }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="{{ form.memo.id_for_label }}">繝｡繝｢</label>
+              {{ form.memo }}
+              {% for e in form.memo.errors %}
+                <div class="invalid-feedback d-block">{{ e }}</div>
+              {% endfor %}
+            </div>
+
+            <div class="d-flex gap-2">
+              <button class="btn btn-primary" type="submit">菫晏ｭ・/button>
+              <a class="btn btn-outline-light" href="{% url 'reports:todo_list' %}">謌ｻ繧・/a>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+

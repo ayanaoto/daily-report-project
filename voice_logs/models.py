@@ -1,23 +1,26 @@
+# voice_logs/models.py
 from django.db import models
+from reports.models import Customer
 
 class VoiceLog(models.Model):
-    """
-    音声メモ等のテキスト記録。
-    - ts: 記録時刻（未指定時はAPIで自動補完）
-    - when: 任意の“日付”（期日のような使い方）
-    """
-    text = models.TextField()
-    intent = models.CharField(max_length=50, default="note")
-    ts = models.DateTimeField(null=True, blank=True)
-    lat = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    lon = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    amount = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
-    customer = models.CharField(max_length=255, null=True, blank=True)
-    when = models.DateField(null=True, blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
+    text = models.TextField("テキスト")
+    intent = models.CharField("インテント", max_length=50, default="note")
+    
+    # 【修正】default='' を追加
+    ts = models.CharField("タイムスタンプ文字列", max_length=100, default='')
 
-    class Meta:
-        ordering = ("-created_at", "-id")
+    created_at = models.DateTimeField(auto_now_add=True)
+    lat = models.FloatField("緯度", null=True, blank=True)
+    lon = models.FloatField("経度", null=True, blank=True)
+    amount = models.IntegerField("金額", null=True, blank=True)
+    when = models.DateField("日付", null=True, blank=True)
+    customer = models.ForeignKey(
+        Customer, 
+        verbose_name="顧客", 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True
+    )
 
     def __str__(self):
-        return f"[{self.id}] {self.intent}: {self.text[:30]}"
+        return self.text[:50]

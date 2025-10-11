@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}{% if form.instance.pk %}繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝医・邱ｨ髮・% else %}繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝医・菴懈・{% endif %}{% endblock %}
+{% block content %}
+    <h1>{% if form.instance.pk %}繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝医・邱ｨ髮・% else %}繝医Λ繝悶Ν繧ｷ繝･繝ｼ繝医・菴懈・{% endif %}</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">菫晏ｭ・/button>
+        <a href="{% url 'reports:troubleshooting_list' %}" class="btn btn-secondary">繧ｭ繝｣繝ｳ繧ｻ繝ｫ</a>
+    </form>
+{% endblock %}

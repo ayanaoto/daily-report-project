@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}案件詳細{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="card shadow-sm">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      <h1 class="h4 mb-0">案件詳細</h1>
+      <div>
+        <a href="{% url 'reports:deal_update' deal.pk %}" class="btn btn-secondary btn-sm">編集</a>
+        <form action="{% url 'reports:deal_delete' deal.pk %}" method="post" class="d-inline" onsubmit="return confirm('本当に「{{ deal.name }}」を削除しますか？');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger btn-sm">削除</button>
+        </form>
+      </div>
+    </div>
+    <div class="card-body">
+      <table class="table table-bordered">
+        <tbody>
+          <tr>
+            <th style="width: 25%;">案件名</th>
+            <td>{{ deal.name }}</td>
+          </tr>
+          <tr>
+            <th>顧客</th>
+            <td>
+              {% if deal.customer %}
+                <a href="{% url 'reports:customer_detail' deal.customer.pk %}">{{ deal.customer }}</a>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <th>金額</th>
+            <td>{{ deal.amount | default:"-" }}</td>
+          </tr>
+          <tr>
+            <th>ステータス</th>
+            {# 【修正】 .get_status_display を追加して日本語で表示 #}
+            <td>{{ deal.get_status_display | default:"-" }}</td>
+          </tr>
+          <tr>
+            <th>受注予定日</th>
+            <td>{{ deal.expected_order_date|date:"Y年m月d日" | default:"-" }}</td>
+          </tr>
+          <tr>
+            <th>作成日</th>
+            <td>{{ deal.created_at|date:"Y年m月d日 H:i" }}</td>
+          </tr>
+          <tr>
+            <th>最終更新日</th>
+            <td>{{ deal.updated_at|date:"Y年m月d日 H:i" }}</td>
+          </tr>
+        </tbody>
+      </table>
+      
+      <div class="mt-4">
+        <a href="{% url 'reports:deal_list' %}" class="btn btn-outline-secondary">案件一覧に戻る</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

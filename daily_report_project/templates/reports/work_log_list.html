@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}菴懈･ｭ譌･蝣ｱ荳隕ｧ{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1>菴懈･ｭ譌･蝣ｱ荳隕ｧ</h1>
+        <a href="{% url 'work_log_create' %}" class="btn btn-primary">譁ｰ縺励＞菴懈･ｭ譌･蝣ｱ繧呈兜遞ｿ縺吶ｋ</a>
+    </div>
+    <hr>
+    
+    {% for log in work_logs %}
+        <a href="{% url 'work_log_detail' log.pk %}" class="card mb-3 text-decoration-none text-dark">
+            <div class="card-header">
+                <strong>諡・ｽ楢・</strong> {{ log.author.username }}
+                <span class="badge bg-primary float-end ms-2">{{ log.get_progress_status_display }}</span>
+                <small class="text-muted float-end">菴懈･ｭ譌･: {{ log.work_date }}</small>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title">{{ log.work_type }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">蝣ｴ謇: {{ log.area }} - {{ log.location }}</h6>
+                <p class="card-text">{{ log.content|linebreaks|truncatewords:50 }}</p>
+            </div>
+        </a>
+    {% empty %}
+        <p>縺ｾ縺菴懈･ｭ譌･蝣ｱ縺ｯ縺ゅｊ縺ｾ縺帙ｓ縲・/p>
+    {% endfor %}
+{% endblock %}
