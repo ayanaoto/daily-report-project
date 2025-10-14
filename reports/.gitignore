@@ -1,0 +1,21 @@
+# Virtualenv
+.venv/
+venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Django local files
+db.sqlite3
+*.log
+staticfiles/
+media/
+
+# Secrets
+.env
+
+# Editor/OS files
+.vscode/
+.idea/
+.DS_Store

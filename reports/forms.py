@@ -1,4 +1,4 @@
-# reports/forms.py (全文)
+# reports/forms.py
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
@@ -10,7 +10,7 @@ from .models import (
     Report,
     Troubleshooting,
     RequiredItem,
-    VoiceLog,
+    RequiredMaterial, # 新しいモデルをインポート
 )
 
 # ===== プロフィール =====
@@ -28,21 +28,13 @@ class SignUpForm(UserCreationForm):
 class CustomerForm(forms.ModelForm):
     class Meta:
         model = Customer
-        fields = ['company_name', 'contact_name', 'phone_number', 'email', 'account_manager']
-        # 【追加】各フィールドにCSSクラスを指定
-        widgets = {
-            'company_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'contact_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'phone_number': forms.TextInput(attrs={'class': 'form-control'}),
-            'email': forms.EmailInput(attrs={'class': 'form-control'}),
-            'account_manager': forms.Select(attrs={'class': 'form-select'}),
-        }
+        fields = ['company_name', 'contact_person', 'phone_number', 'email_address', 'account_manager']
 
 # ===== 案件 =====
 class DealForm(forms.ModelForm):
     class Meta:
         model = Deal
-        fields = ['name', 'customer', 'status', 'amount', 'expected_order_date']
+        fields = ['deal_name', 'customer', 'status', 'amount', 'close_date']
 
 # ===== 日報 =====
 class ReportForm(forms.ModelForm):
@@ -51,13 +43,12 @@ class ReportForm(forms.ModelForm):
     
     class Meta:
         model = Report
-        fields = ["title", "location", "progress", "work_content", "note"]
+        fields = ["location", "progress", "content", "remarks"]
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control'}),
             'location': forms.TextInput(attrs={'class': 'form-control'}),
             'progress': forms.Select(attrs={'class': 'form-select'}),
-            'work_content': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
-            'note': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'content': forms.Textarea(attrs={'class': 'form-control', 'rows': 5}),
+            'remarks': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': '例: 〇〇、△△が必要'}),
         }
 
 # ===== ナレッジ（トラブルシュート） =====
@@ -70,10 +61,24 @@ class TroubleshootingForm(forms.ModelForm):
 class RequiredItemForm(forms.ModelForm):
     class Meta:
         model = RequiredItem
-        fields = ["title", "assignee", "required_items_list", "is_done"]
+        fields = ["title", "description", "deal", "assignee", "is_done"]
         widgets = {
             "title": forms.TextInput(attrs={"class": "form-control"}),
+            "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "deal": forms.Select(attrs={"class": "form-select"}),
             "assignee": forms.Select(attrs={"class": "form-select"}),
-            "required_items_list": forms.Textarea(attrs={"class": "form-control", "rows": 4}),
             "is_done": forms.CheckboxInput(attrs={"class": "form-check-input"}),
         }
+
+# ▼▼▼【ここから追加】▼▼▼
+# ===== 必要物リスト =====
+class RequiredMaterialForm(forms.ModelForm):
+    class Meta:
+        model = RequiredMaterial
+        # フォームでユーザーに入力させるフィールド
+        fields = ['name', 'quantity']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '物品名'}),
+            'quantity': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '数量（例: 1）'}),
+        }
+# ▲▲▲【ここまで】▲▲▲

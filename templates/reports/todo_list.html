@@ -1,148 +1,109 @@
 {% extends "base.html" %}
 {% load static %}
-
 {% block title %}ToDo一覧{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  {% if messages %}
-    {% for message in messages %}
-      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-        {{ message }}
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-      </div>
-    {% endfor %}
-  {% endif %}
+<div class="container my-4">
 
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0">ToDo一覧</h1>
-    <a href="{% url 'reports:todo_create' %}" class="btn btn-primary">
-      <i class="fas fa-plus me-1"></i> 新規追加
-    </a>
+    <h1 class="h4 mb-0">ToDo一覧</h1>
+    <div class="d-flex gap-2">
+      <a class="btn btn-success" href="{% url 'reports:todo_create' %}">+ 新規作成</a>
+      </div>
   </div>
 
-  <div class="card shadow-sm">
-    <div class="card-body">
-      <form method="post" id="todo-list-form" action="{% url 'reports:todo_delete_selected' %}">
-        {% csrf_token %}
-
-        <div class="mb-3 d-flex gap-2">
-          <button type="submit" id="delete-selected-btn" class="btn btn-danger" disabled>
-            <i class="fas fa-trash-alt me-1"></i> 選択した項目を削除
-          </button>
-          <a href="{% url 'reports:todo_export_csv' %}" class="btn btn-outline-secondary">
-            CSVエクスポート
-          </a>
-        </div>
-
-        <div class="table-responsive">
-          <table class="table table-hover">
-            <thead class="table-light">
-              <tr>
-                <th scope="col" class="text-center" style="width: 1rem;">
-                  <input class="form-check-input" type="checkbox" id="select-all-checkbox" title="すべて選択/解除">
-                </th>
-                <th scope="col">項目</th>
-                <th scope="col">必要物リスト</th>
-                <th scope="col">案件</th>
-                <th scope="col">状態</th>
-                <th scope="col" class="text-center">操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for item in items %}
-              <tr>
-                <td class="text-center align-middle">
-                  <input class="form-check-input todo-checkbox" type="checkbox" name="todo_ids" value="{{ item.pk }}">
-                </td>
-                <td class="align-middle">
-                  {% if item.is_done %}
-                    <del class="text-muted">{{ item.title }}</del>
-                  {% else %}
-                    {{ item.title }}
-                  {% endif %}
-                </td>
-                <td class="align-middle small text-muted">
-                  {{ item.required_items_list|linebreaksbr }}
-                </td>
-                <td class="align-middle">{{ item.deal|default:"-" }}</td>
-                <td class="align-middle">
-                  {% if item.is_done %}
-                    <span class="badge bg-success">完了</span>
-                  {% else %}
-                    <span class="badge bg-secondary">未完了</span>
-                  {% endif %}
-                </td>
-                <td class="text-center align-middle">
-                  <a href="{% url 'reports:todo_update' item.pk %}" class="btn btn-sm btn-outline-secondary">編集</a>
-                  
-                  <button type="submit" class="btn btn-sm btn-outline-info ms-1" 
-                          formaction="{% url 'reports:todo_toggle' item.pk %}" 
-                          formmethod="post">完了切替</button>
-                </td>
-              </tr>
-              {% empty %}
-              <tr>
-                <td colspan="6" class="text-center text-muted py-4">
-                  登録されているToDoはありません。
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </form>
+  <form class="row g-3 align-items-end mb-3" method="get">
+    <div class="col-12 col-md-6 col-lg-4">
+      <label class="form-label small text-muted">キーワード</label>
+      <input name="q" value="{{ request.GET.q }}" class="form-control" placeholder="件名・説明">
     </div>
+    <div class="col-auto">
+      <button class="btn btn-primary" type="submit">絞り込み</button>
+    </div>
+    <div class="col-auto">
+      <a class="btn btn-outline-secondary" href="{% url 'reports:todo_list' %}">リセット</a>
+    </div>
+    <div class="col-auto ms-auto d-flex gap-2">
+      <button type="button" class="btn btn-outline-secondary" onclick="window.print()">印刷 / PDF</button>
+    </div>
+  </form>
+
+  <form id="bulkForm" method="post" action="{% url 'reports:todo_delete_selected' %}">
+    {% csrf_token %}
+    <div id="printTodoArea" class="card">
+      <div class="table-responsive">
+        <table class="table mb-0 align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th style="width: 48px;"></th>
+              <th>件名 / 説明</th>
+              <th style="width: 160px;">状態 / 作成</th>
+              <th style="width: 120px;" class="text-end">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for i in items %}
+            <tr>
+              <td>
+                <input class="form-check-input todo-check" type="checkbox" name="todo_ids" value="{{ i.id }}">
+              </td>
+              <td>
+                <div class="fw-semibold">
+                  {% if i.is_done %}
+                    <span class="badge text-bg-success me-2">Done</span>
+                  {% else %}
+                    <span class="badge text-bg-secondary me-2">Pending</span>
+                  {% endif %}
+                  {{ i.title }}
+                  {% if i.deal %}<span class="small text-muted ms-2">（案件: {{ i.deal }}）</span>{% endif %}
+                </div>
+                {% if i.description %}
+                <div class="small text-muted" style="white-space: pre-wrap;">{{ i.description }}</div>
+                {% endif %}
+              </td>
+              <td>
+                <div class="small text-muted">
+                  {% if i.created_at %}{{ i.created_at|date:"Y-m-d H:i" }}{% else %}-{% endif %}
+                </div>
+              </td>
+              <td class="text-end">
+                <a class="btn btn-sm btn-outline-primary" href="{% url 'reports:todo_update' i.pk %}">編集</a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">ToDoはありません。</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2 mt-3">
+      <button type="submit" class="btn btn-outline-danger"
+              onclick="return confirm('選択したToDoを削除します。よろしいですか？')">
+        一括削除
+      </button>
+      <a class="btn btn-light" href="{% url 'reports:report_list' %}">日報一覧へ</a>
+    </div>
+  </form>
+
+  <div class="text-muted small mt-2">
+    PDF保存はブラウザの印刷から「PDFに保存」を選択してください。
   </div>
 </div>
 {% endblock %}
 
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const selectAllCheckbox = document.getElementById('select-all-checkbox');
-    const todoCheckboxes = document.querySelectorAll('.todo-checkbox');
-    const deleteBtn = document.getElementById('delete-selected-btn');
-    const form = document.getElementById('todo-list-form');
+{% block extra_scripts %}{% endblock %}
 
-    function toggleDeleteButton() {
-        const anyChecked = Array.from(todoCheckboxes).some(cb => cb.checked);
-        deleteBtn.disabled = !anyChecked;
-    }
-
-    selectAllCheckbox.addEventListener('change', function() {
-        todoCheckboxes.forEach(checkbox => {
-            checkbox.checked = selectAllCheckbox.checked;
-        });
-        toggleDeleteButton();
-    });
-
-    todoCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            if (!this.checked) {
-                selectAllCheckbox.checked = false;
-            } else {
-                const allChecked = Array.from(todoCheckboxes).every(cb => cb.checked);
-                selectAllCheckbox.checked = allChecked;
-            }
-            toggleDeleteButton();
-        });
-    });
-
-    // 「選択した項目を削除」ボタンが押されたときだけ確認ダイアログを出す
-    deleteBtn.addEventListener('click', function(e) {
-        const anyChecked = Array.from(todoCheckboxes).some(cb => cb.checked);
-        if (!anyChecked) {
-            e.preventDefault();
-            alert('削除する項目を選択してください。');
-            return;
-        }
-        if (!confirm('選択した項目を本当に削除しますか？')) {
-            e.preventDefault();
-        }
-    });
-
-    toggleDeleteButton();
-});
-</script>
+{% block extra_styles %}
+<style>
+  @media print {
+    .navbar, form, .btn, .dropdown, .alert, .breadcrumb { display: none !important; }
+    .container { max-width: 100% !important; }
+    .card { border: none !important; box-shadow: none !important; }
+    .form-check-input { opacity: 0; }
+    a[href]:after { content: ""; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
 {% endblock %}

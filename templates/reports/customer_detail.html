@@ -1,89 +1,34 @@
 {% extends "base.html" %}
-
-{% block title %}顧客詳細: {{ object.company_name }}{% endblock %}
+{% load static %}
+{% block title %}{{ customer.company_name|default:"(名称未登録)" }} 詳細{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-  <div class="card shadow-sm mb-4">
+  <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <h1 class="h4 mb-0">{{ object.company_name }}</h1>
-      <div>
-        {# URLの名前に 'reports:' を追加 #}
-        <a href="{% url 'reports:customer_update' object.pk %}" class="btn btn-secondary btn-sm">編集</a>
-        <a href="{% url 'reports:customer_delete' object.pk %}" class="btn btn-danger btn-sm">削除</a>
+      <h1 class="card-title mb-0">{{ customer.company_name|default:"(名称未登録)" }}</h1>
+      <div class="d-flex gap-2">
+        <a href="{% url 'reports:customer_update' customer.pk %}" class="btn btn-primary">編集</a>
+        <a href="{% url 'reports:customer_delete' customer.pk %}" class="btn btn-danger">削除</a>
       </div>
     </div>
     <div class="card-body">
-      <table class="table table-bordered">
-        <tbody>
-          <tr>
-            <th style="width: 25%;">担当者名</th>
-            {# フィールド名を 'contact_name' に修正 #}
-            <td>{{ object.contact_name|default:"-" }}</td>
-          </tr>
-          <tr>
-            <th>電話番号</th>
-            <td>{{ object.phone_number|default:"-" }}</td>
-          </tr>
-          <tr>
-            <th>メールアドレス</th>
-            {# フィールド名を 'email' に修正 #}
-            <td>{{ object.email|default:"-" }}</td>
-          </tr>
-          <tr>
-            <th>作成日</th>
-            <td>{{ object.created_at|date:"Y年m月d日 H:i" }}</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="row g-4">
+        <div class="col-md-6">
+          <table class="table">
+            <tr><th class="w-25">担当者名</th><td>{% firstof customer.contact_person customer.contact_name "-" %}</td></tr>
+            <tr><th>電話番号</th><td>{% firstof customer.phone_number customer.phone "-" %}</td></tr>
+            <tr><th>メールアドレス</th><td>{% firstof customer.email_address customer.email "-" %}</td></tr>
+            <tr><th>作成日</th><td>{% if customer.created_at %}{{ customer.created_at|date:"Y-m-d H:i" }}{% else %}-{% endif %}</td></tr>
+          </table>
+        </div>
+        <div class="col-md-6">
+          <!-- 関連情報をここに追加したければどうぞ -->
+        </div>
+      </div>
     </div>
   </div>
 
-  {# 関連案件と関連日報（views.pyで渡されている場合） #}
-  <div class="row">
-    <div class="col-lg-6 mb-4">
-      <div class="card shadow-sm">
-        <div class="card-header">
-          関連案件
-        </div>
-        <div class="list-group list-group-flush">
-          {% for deal in deals %}
-            <a href="{% url 'reports:deal_detail' deal.pk %}" class="list-group-item list-group-item-action">
-              <div class="d-flex w-100 justify-content-between">
-                {# フィールド名を 'name' に修正 #}
-                <h5 class="mb-1">{{ deal.name }}</h5>
-                <small>{{ deal.status }}</small>
-              </div>
-              <p class="mb-1 text-muted">金額: {{ deal.amount|default:"-" }}</h>
-            </a>
-          {% empty %}
-            <div class="list-group-item">この顧客に関連する案件はありません。</div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-    <div class="col-lg-6 mb-4">
-      <div class="card shadow-sm">
-        <div class="card-header">
-          関連日報
-        </div>
-         <div class="list-group list-group-flush">
-          {% for report in reports %}
-            <a href="{% url 'reports:report_detail' report.pk %}" class="list-group-item list-group-item-action">
-              <div class="d-flex w-100 justify-content-between">
-                <h5 class="mb-1">{{ report.title|truncatechars:30 }}</h5>
-                <small>{{ report.created_at|date:"Y/m/d" }}</small>
-              </div>
-              <p class="mb-1 text-muted">{{ report.content|truncatewords:20 }}</p>
-            </a>
-          {% empty %}
-            <div class="list-group-item">この顧客に関連する日報はありません。</div>
-          {% endfor %}
-        </div>
-      </div>
-    </div>
-  </div>
-  
-  <a href="{% url 'reports:customer_list' %}" class="btn btn-outline-secondary">顧客一覧に戻る</a>
+  <a class="btn btn-outline-secondary" href="{% url 'reports:customer_list' %}">顧客一覧へ</a>
 </div>
 {% endblock %}

@@ -1,135 +1,188 @@
 {% extends "base.html" %}
-
 {% block title %}グラフ分析ダッシュボード{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-  <h1 class="h3 mb-4">グラフ分析ダッシュボード</h1>
+<div class="container my-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">グラフ分析ダッシュボード</h2>
+    <div>
+      <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+        <i class="bi bi-printer"></i> 印刷 / PDF保存
+      </button>
+    </div>
+  </div>
 
-  <div class="row mb-4">
-    <div class="col-md-4 mb-3">
-      <div class="card shadow-sm h-100">
+  <div class="row g-3 mb-3">
+    <div class="col-md-6">
+      <div class="card shadow-sm">
         <div class="card-body text-center">
-          <h5 class="card-title">あなたの総作業件数</h5>
-          <p class="card-text fs-2 fw-bold" id="user-total-count">0</p>
+          <div class="text-muted">あなたの総作業件数</div>
+          <div id="user-total-count" class="display-6">-</div>
         </div>
       </div>
     </div>
-    <div class="col-md-4 mb-3">
-      <div class="card shadow-sm h-100">
+    <div class="col-md-6">
+      <div class="card shadow-sm">
         <div class="card-body text-center">
-          <h5 class="card-title">グループ全体の総作業件数</h5>
-          <p class="card-text fs-2 fw-bold" id="group-total-count">0</p>
-        </div>
-      </div>
-    </div>
-    <div class="col-md-4 mb-3">
-      <div class="card shadow-sm h-100">
-        <div class="card-body text-center">
-          <h5 class="card-title">グループ全体の達成率</h5>
-          <p class="card-text fs-2 fw-bold" id="achievement-rate">0 %</p>
+          <div class="text-muted">グループ全体の総作業件数</div>
+          <div id="group-total-count" class="display-6">-</div>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="row">
-    <div class="col-lg-6 mb-4">
+  <div class="row g-3">
+    <div class="col-md-6">
       <div class="card shadow-sm">
-        <div class="card-header">あなたの進捗ステータス (件数)</div>
-        <div class="card-body"><canvas id="personalProgressChart"></canvas></div>
+        <div class="card-header bg-info text-white fw-bold">あなたの進捗ステータス（件数）</div>
+        <div class="card-body" style="height: 360px;">
+          <canvas id="myProgressChart"></canvas>
+        </div>
       </div>
     </div>
 
-    <div class="col-lg-6 mb-4">
+    <div class="col-md-6">
       <div class="card shadow-sm">
-        <div class="card-header">あなたの場所ごと作業時間 (Top 10)</div>
-        <div class="card-body"><canvas id="personalLocationHoursChart"></canvas></div>
+        <div class="card-header bg-info text-white fw-bold">あなたの場所ごと作業時間 (Top 10)</div>
+        <div class="card-body" style="height: 360px;">
+          <canvas id="myLocationHoursChart"></canvas>
+        </div>
       </div>
     </div>
 
-    <div class="col-lg-6 mb-4">
+    <div class="col-md-12">
       <div class="card shadow-sm">
-        <div class="card-header">グループ全体の進捗ステータス</div>
-        <div class="card-body"><canvas id="groupProgressChart"></canvas></div>
+        <div class="card-header bg-info text-white fw-bold">グループの担当者別作業件数 (Top 10)</div>
+        <div class="card-body" style="height: 360px;">
+          <canvas id="groupUserCountsChart"></canvas>
+        </div>
       </div>
     </div>
 
-    <div class="col-lg-6 mb-4">
+    <div class="col-md-12">
       <div class="card shadow-sm">
-        <div class="card-header">グループの担当者別作業件数</div>
-        <div class="card-body"><canvas id="groupAuthorChart"></canvas></div>
+        <div class="card-header bg-info text-white fw-bold">グループの日別件数（直近30日）</div>
+        <div class="card-body" style="height: 360px;">
+          <canvas id="groupDailyCountsChart"></canvas>
+        </div>
       </div>
     </div>
   </div>
 </div>
 {% endblock %}
 
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-  const chartColors = ['#0d6efd', '#6f42c1', '#dc3545', '#fd7e14', '#198754', '#20c997', '#6c757d'];
-  const charts = {}; // グラフインスタンスを保持
+(function(){
+  const charts = {}; // グラフのインスタンスを保持するオブジェクト
 
-  // グラフ作成ヘルパー
-  const makeChart = (ctxId, type, labels, data, label) => {
-    const ctx = document.getElementById(ctxId);
-    if (!ctx) return;
-    if (charts[ctxId]) charts[ctxId].destroy(); // 既存のグラフを破棄
-    charts[ctxId] = new Chart(ctx, {
-      type: type,
-      data: {
-        labels: labels,
-        datasets: [{ label: label, data: data, backgroundColor: chartColors }]
-      },
-      options: { responsive: true, maintainAspectRatio: false, indexAxis: type === 'bar' ? 'y' : 'x' }
-    });
-  };
+  // 汎用的なグラフ描画関数
+  function renderChart(canvasId, config) {
+    const el = document.getElementById(canvasId);
+    if (!el) return;
+    const ctx = el.getContext('2d');
 
+    if (charts[canvasId]) {
+      charts[canvasId].destroy(); // 既存のグラフを破棄
+    }
+
+    if (!config.data.labels || config.data.labels.length === 0) {
+      ctx.font = '14px sans-serif';
+      ctx.fillStyle = '#777';
+      ctx.textAlign = 'center';
+      ctx.fillText('データがありません', el.width / 2, el.height / 2);
+      return;
+    }
+
+    charts[canvasId] = new Chart(ctx, config);
+  }
+
+  // サーバーからデータを非同期で取得して画面に反映する関数
   async function loadDashboardData() {
     try {
-      const response = await fetch("{% url 'reports:dashboard_data' %}");
-      if (!response.ok) throw new Error('Network response was not ok');
-      const data = await response.json();
-
-      // カードの数値を更新
-      document.getElementById('user-total-count').textContent = data.cards.user_total_count;
-      document.getElementById('group-total-count').textContent = data.cards.group_total_count;
-      document.getElementById('achievement-rate').textContent = `${data.cards.achievement_rate} %`;
-
-      // グラフを描画
-      // 1. あなたの進捗
-      const personalProgress = data.charts.personal_progress;
-      if (personalProgress.length > 0) {
-        makeChart('personalProgressChart', 'doughnut', personalProgress.map(d => d.progress), personalProgress.map(d => d.count), '件数');
+      const url = "{% url 'reports:dashboard_data' %}";
+      const response = await fetch(url, { headers: { 'X-Requested-With': 'fetch' } });
+      
+      if (!response.ok) {
+        throw new Error('データ取得に失敗しました: ' + response.statusText);
       }
       
-      // 2.【修正】あなたの場所ごと作業時間
-      const personalLocHours = data.charts.personal_location_hours;
-      if (Object.keys(personalLocHours).length > 0) {
-        makeChart('personalLocationHoursChart', 'bar', Object.keys(personalLocHours), Object.values(personalLocHours), '合計作業時間 (h)');
+      const j = await response.json();
+
+      if (!j.ok) {
+        throw new Error('APIがエラーを返しました');
       }
 
-      // 3. グループ全体の進捗
-      const groupProgress = data.charts.group_progress;
-      if (groupProgress.length > 0) {
-        makeChart('groupProgressChart', 'pie', groupProgress.map(d => d.progress), groupProgress.map(d => d.count), '件数');
-      }
+      // カードの値を更新
+      document.getElementById('user-total-count').textContent = j.cards.user_total_count ?? '-';
+      document.getElementById('group-total-count').textContent = j.cards.group_total_count ?? '-';
 
-      // 4. グループの担当者別件数
-      const groupAuthor = data.charts.group_author_count;
-      if (groupAuthor.length > 0) {
-        makeChart('groupAuthorChart', 'bar', groupAuthor.map(d => d.author__username), groupAuthor.map(d => d.count), '作業件数');
-      }
-      
-    } catch (error) {
-      console.error('Failed to load dashboard data:', error);
+      // 各グラフを描画
+      renderChart('myProgressChart', {
+        type: j.charts.my_progress.type || 'pie',
+        data: {
+          labels: j.charts.my_progress.labels,
+          datasets: [{ data: j.charts.my_progress.data }]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+
+      renderChart('myLocationHoursChart', {
+        type: j.charts.my_location_hours.type || 'bar',
+        data: {
+          labels: j.charts.my_location_hours.labels,
+          datasets: [{ label: '作業時間(h)', data: j.charts.my_location_hours.data }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, indexAxis: 'y', plugins: { legend: { display: false } } }
+      });
+
+      renderChart('groupUserCountsChart', {
+        type: j.charts.group_user_counts.type || 'bar',
+        data: {
+          labels: j.charts.group_user_counts.labels,
+          datasets: [{ label: '件数', data: j.charts.group_user_counts.data }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+
+      renderChart('groupDailyCountsChart', {
+        type: j.charts.group_daily_counts.type || 'line',
+        data: {
+          labels: j.charts.group_daily_counts.labels,
+          datasets: [{ label: '件数', data: j.charts.group_daily_counts.data, tension: 0.1 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+
+    } catch (err) {
+      console.error('ダッシュボードの読み込み中にエラーが発生しました:', err);
+      ['myProgressChart', 'myLocationHoursChart', 'groupUserCountsChart', 'groupDailyCountsChart'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) {
+              const ctx = el.getContext('2d');
+              ctx.font = '14px sans-serif';
+              ctx.fillStyle = '#dc3545'; // エラーなので赤色
+              ctx.textAlign = 'center';
+              ctx.fillText('データの読み込みに失敗しました', el.width / 2, el.height / 2);
+          }
+      });
     }
   }
 
-  loadDashboardData();
-});
+  // ページが読み込まれたらデータを取得
+  document.addEventListener('DOMContentLoaded', loadDashboardData);
+})();
 </script>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+  @media print {
+    .navbar, .btn { display: none !important; }
+    .card { border: 1px solid #ddd !important; box-shadow: none !important; page-break-inside: avoid; }
+    .container, .container-fluid { max-width: 100% !important; padding: 0 !important; margin: 0 !important; }
+    canvas { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
 {% endblock %}

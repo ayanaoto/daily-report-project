@@ -1,60 +1,92 @@
 {% extends "base.html" %}
-
-{% block title %}トラブルシュートナレッジ{% endblock %}
+{% load static %}
+{% block title %}トラブルシューティング一覧{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h2 mb-0">トラブルシュートナレッジ</h1>
-  <a href="{% url 'reports:troubleshooting_create' %}" class="btn btn-primary">
-    ＋ 新規作成
-  </a>
-</div>
+<div class="container my-4">
 
-<div class="card mb-4">
-    <div class="card-body">
-        <form method="get" class="row g-2">
-            <div class="col-sm-10">
-                <input type="text" name="q" class="form-control" placeholder="キーワードで検索 (例: 起動, 接続)" value="{{ query }}">
-            </div>
-            <div class="col-sm-2 d-grid">
-                <button type="submit" class="btn btn-outline-primary">検索</button>
-            </div>
-        </form>
+  <!-- タイトル行 & 右上アクション -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">トラブルシューティング一覧</h1>
+    <div class="d-flex gap-2">
+      <a class="btn btn-success" href="{% url 'reports:troubleshooting_create' %}">+ 新規作成</a>
     </div>
-</div>
+  </div>
 
-<div class="card">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover mb-0 align-middle">
-                <thead>
-                    <tr>
-                        <th style="width: 120px;">操作</th>
-                        <th>タイトル</th>
-                        <th style="width: 18%;">発生日</th>
-                        <th style="width: 18%;">更新日</th>
-                        <th style="width: 14%;">報告者</th>
-                    </tr>
-                </thead>
-                <tbody>
-                {% for item in items %}
-                    <tr>
-                        <td>
-                            <a class="btn btn-sm btn-info" href="{{ item.get_absolute_url }}">詳細</a>
-                        </td>
-                        <td>{{ item.title }}</td>
-                        <td>{{ item.occurred_at|date:"Y-m-d" }}</td>
-                        <td>{{ item.updated_at|date:"Y-m-d H:i" }}</td>
-                        <td>{{ item.author.username|default:"-" }}</td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center py-4">トラブルシュートナレッジはありません。</td>
-                    </tr>
-                {% endfor %}
-                </tbody>
-            </table>
-        </div>
+  <!-- フィルターバー（レポート一覧風） -->
+  <form class="row g-3 align-items-end mb-3" method="get">
+    <div class="col-12 col-md-6 col-lg-4">
+      <label class="form-label small text-muted">キーワード</label>
+      <input name="q" value="{{ query }}" class="form-control" placeholder="症状・対処・キーワード">
     </div>
+
+    <div class="col-auto">
+      <button class="btn btn-primary" type="submit">絞り込み</button>
+    </div>
+    <div class="col-auto">
+      <a class="btn btn-outline-secondary" href="{% url 'reports:troubleshooting_list' %}">リセット</a>
+    </div>
+    <div class="col-auto ms-auto">
+      <button type="button" class="btn btn-outline-secondary" onclick="window.print()">印刷 / PDF</button>
+    </div>
+  </form>
+
+  <!-- 表風リスト -->
+  <div id="printListArea" class="card">
+    <div class="table-responsive">
+      <table class="table mb-0 align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th style="width: 200px;">作成日時</th>
+            <th>タイトル / 概要</th>
+            <th style="width: 120px;" class="text-end">操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in items %}
+          <tr>
+            <td>
+              {% if item.created_at %}
+                {{ item.created_at|date:"Y-m-d H:i" }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              <div class="fw-semibold">{{ item.title }}</div>
+              <div class="small text-muted">
+                {% if item.keywords %}{{ item.keywords }}{% endif %}
+              </div>
+              {% if item.symptom %}
+                <div class="small text-muted" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 60ch;">
+                  {{ item.symptom }}
+                </div>
+              {% endif %}
+            </td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-primary" href="{% url 'reports:troubleshooting_detail' item.pk %}">詳細</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="3">該当する項目はありません。</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="text-muted small mt-2">PDF保存はブラウザの印刷から「PDFに保存」を選択してください。</div>
 </div>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+  @media print {
+    .navbar, form, .btn, .dropdown, .alert, .breadcrumb { display: none !important; }
+    .container { max-width: 100% !important; }
+    .card { border: none !important; box-shadow: none !important; }
+    a[href]:after { content: ""; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
 {% endblock %}

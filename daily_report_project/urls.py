@@ -2,27 +2,27 @@
 
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import RedirectView
+from django.conf import settings
+from django.conf.urls.static import static
 
-# reportsアプリからビューをインポート
-from reports import views as report_views
+# reportsアプリからサインアップ用のビューをインポートします
+from reports import views as reports_views
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-
-    # サインアップページのURL
-    path("accounts/signup/", report_views.SignUpView.as_view(), name="signup"),
-
-    # Django標準の認証URL（ログイン、ログアウトなど）
+    
+    # Django標準の認証URL（ログイン、ログアウト等）
     path("accounts/", include("django.contrib.auth.urls")),
+    # 新規登録(signup)用のURL
+    path("accounts/signup/", reports_views.SignUpView.as_view(), name="signup"),
 
-    # トップページは /reports/ へリダイレクト
-    path("", RedirectView.as_view(url="/reports/", permanent=False)),
-
-    # reportsアプリのURL
-    path("reports/", include("reports.urls")),
-
-    # ▼▼▼ API用のURLをここに追加 ▼▼▼
-    path("api/voice-logs/", report_views.api_voice_logs, name="api_voice_logs"),
-    path("api/tts/", report_views.api_tts, name="api_tts"),
+    # ▼▼▼【ここが最重要】▼▼▼
+    # "/" や "/reports/" へのアクセスはすべて reports.urls に任せる
+    # これで /reports/voice-logger/ のようなURLが正しく解決されるようになります。
+    path("", include("reports.urls")), 
+    # ▲▲▲【ここまで】▲▲▲
 ]
+
+# 開発環境でメディアファイルを配信するための設定
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

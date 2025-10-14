@@ -1,44 +1,117 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %}日報詳細{% endblock %}
-{% block content %}
-<div class="container" style="max-width:900px">
-  <h1 class="mb-3">日報詳細</h1>
 
-  <div class="card mb-3">
+{% block content %}
+<div class="container my-4" style="max-width: 960px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3 mb-0">日報詳細</h1>
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+        <i class="bi bi-printer"></i> 印刷 / PDF保存
+      </button>
+      <a class="btn btn-outline-danger" href="{% url 'reports:report_delete' object.pk %}">削除</a>
+      <a class="btn btn-light" href="{% url 'reports:report_list' %}">一覧へ戻る</a>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="card mb-4">
     <div class="card-body">
       <dl class="row mb-0">
-        <dt class="col-sm-3">報告者</dt><dd class="col-sm-9">{{ object.author.username }}</dd>
-        <dt class="col-sm-3">作成日</dt><dd class="col-sm-9">{{ object.created_at|date:"Y-m-d H:i" }}</dd>
+        <dt class="col-sm-3">作成者</dt><dd class="col-sm-9">{{ object.author.get_full_name|default:object.author.username }}</dd>
+        <dt class="col-sm-3">作成日時</dt><dd class="col-sm-9">{{ object.created_at|date:"Y-m-d H:i" }}</dd>
         <dt class="col-sm-3">場所</dt><dd class="col-sm-9">{{ object.location }}</dd>
-        <dt class="col-sm-3">進捗</dt><dd class="col-sm-9">{{ object.get_progress_display }}</dd>
         <dt class="col-sm-3">作業時間</dt><dd class="col-sm-9">{{ object.work_hours }}</dd>
-        <dt class="col-sm-3">作業内容</dt><dd class="col-sm-9"><pre style="white-space:pre-wrap; font-family: inherit;">{{ object.content }}</pre></dd>
-        <dt class="col-sm-3">備考</dt><dd class="col-sm-9"><pre style="white-space:pre-wrap; font-family: inherit;">{{ object.remarks }}</pre></dd>
+        <dt class="col-sm-3">進捗</dt><dd class="col-sm-9">{{ object.get_progress_display }}</dd>
+        <dt class="col-sm-3">本文</dt><dd class="col-sm-9"><pre class="mb-0" style="white-space: pre-wrap;">{{ object.content }}</pre></dd>
+        <dt class="col-sm-3">備考</dt><dd class="col-sm-9"><pre class="mb-0" style="white-space: pre-wrap;">{{ object.remarks }}</pre></dd>
       </dl>
     </div>
   </div>
 
-  {% if object.attachments.all %}
-  <div class="card">
-    <div class="card-header">添付ファイル</div>
+  <div class="card mb-4">
+    <div class="card-header fw-bold">必要物リスト</div>
+    {% if object.required_materials.all %}
     <ul class="list-group list-group-flush">
-      {% for a in object.attachments.all %}
-      <li class="list-group-item d-flex justify-content-between align-items-center">
-        <div>
-          <div class="fw-bold">{{ a.title|default:"(無題)" }}</div>
-          <div class="small text-muted">{{ a.file.name }}</div>
-        </div>
-        <a class="btn btn-sm btn-outline-secondary" href="{{ a.file.url }}" target="_blank">開く</a>
-      </li>
+      {% for item in object.required_materials.all %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <div>
+            {% if item.status == 'procured' %}
+              <s class="text-muted">{{ item.name }} ({{ item.quantity }})</s> <span class="badge bg-success ms-2">調達済</span>
+            {% else %}
+              {{ item.name }} ({{ item.quantity }})
+            {% endif %}
+          </div>
+          <div class="d-flex gap-2">
+            <a href="{% url 'reports:required_material_toggle_status' item.pk %}" class="btn btn-sm {% if item.status == 'procured' %}btn-outline-secondary{% else %}btn-outline-success{% endif %}">
+              {% if item.status == 'procured' %}未調達に戻す{% else %}調達済にする{% endif %}
+            </a>
+            <form action="{% url 'reports:required_material_delete' item.pk %}" method="post" onsubmit="return confirm('「{{ item.name }}」を削除しますか？');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">削除</button>
+            </form>
+          </div>
+        </li>
       {% endfor %}
     </ul>
+    {% else %}
+    <div class="card-body text-muted">
+      必要物はありません。
+    </div>
+    {% endif %}
+    <div class="card-footer">
+      <form method="post" action="{% url 'reports:required_material_create' report_pk=object.pk %}" class="row g-2 align-items-center">
+        {% csrf_token %}
+        <div class="col">{{ material_form.name }}</div>
+        <div class="col-md-3">{{ material_form.quantity }}</div>
+        <div class="col-auto">
+          <button type="submit" class="btn btn-primary">リストに手動追加</button>
+        </div>
+      </form>
+    </div>
   </div>
-  {% endif %}
-
-  <div class="mt-3 d-flex gap-2">
-    <a class="btn btn-primary" href="{% url 'reports:report_update' object.pk %}">編集</a>
-    <a class="btn btn-danger" href="{% url 'reports:report_delete' object.pk %}">削除</a>
-    <a class="btn btn-secondary" href="{% url 'reports:report_list' %}">一覧へ</a>
+  <div class="text-muted small">
+    ※ PDF化は上部の「印刷 / PDF保存」ボタンから、ブラウザの印刷ダイアログで「PDFに保存」を選択してください。
   </div>
 </div>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+  /* 印刷用最適化 */
+  @media print {
+    .navbar, .btn, .dropdown, .alert, .breadcrumb, footer, form { 
+      display: none !important; 
+    }
+    .card { 
+      border: none !important; 
+      box-shadow: none !important; 
+    }
+    .container, .container-fluid {
+      max-width: 100% !important;
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+    a[href]:after { 
+      content: ""; 
+    }
+    pre { 
+      white-space: pre-wrap; 
+      word-wrap: break-word;
+    }
+    body { 
+      -webkit-print-color-adjust: exact; 
+      print-color-adjust: exact; 
+    }
+  }
+</style>
 {% endblock %}

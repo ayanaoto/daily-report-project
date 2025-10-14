@@ -1,49 +1,66 @@
 {% extends "base.html" %}
+{% load static %}
+{% load widget_tweaks %}
 
-{% block title %}顧客情報{% if not object %}登録{% else %}編集{% endif %}{% endblock %}
+{% block title %}{% if object %}顧客情報の編集{% else %}顧客の新規登録{% endif %}{% endblock %}
 
 {% block content %}
 <div class="container py-4">
-  <div class="row justify-content-center">
-    <div class="col-lg-8">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h1 class="h4 mb-4">
-            {% if not object %}顧客の新規登録{% else %}顧客情報の編集{% endif %}
-          </h1>
 
-          <form method="post">
-            {% csrf_token %}
+  <h1 class="mb-4">{% if object %}顧客情報の編集{% else %}顧客の新規登録{% endif %}</h1>
 
-            {% if form.non_field_errors %}
-              <div class="alert alert-danger" role="alert">
-                {{ form.non_field_errors }}
-              </div>
-            {% endif %}
+  <div class="card shadow-sm">
+    <div class="card-header fw-semibold">入力フォーム</div>
+    <div class="card-body">
 
-            {% for field in form %}
-              <div class="mb-3">
-                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                {# 【修正】add_classフィルターを削除 #}
-                {{ field }}
-                {% if field.help_text %}
-                  <div class="form-text">{{ field.help_text }}</div>
-                {% endif %}
-                {% for error in field.errors %}
-                  <div class="invalid-feedback d-block">{{ error }}</div>
-                {% endfor %}
-              </div>
-            {% endfor %}
+      <form method="post" novalidate>
+        {% csrf_token %}
 
-            <div class="d-flex gap-2 mt-4">
-              <button type="submit" class="btn btn-primary">保存する</button>
-              <a href="{% url 'reports:customer_list' %}" class="btn btn-secondary">キャンセル</a>
-            </div>
-          </form>
+        <div class="row g-3">
+          <!-- 会社名 / 担当者名 -->
+          <div class="col-md-6">
+            <label class="form-label">会社名</label>
+            {% render_field form.company_name class+="form-control" placeholder="株式会社〇〇" %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">担当者名</label>
+            {% render_field form.contact_person class+="form-control" placeholder="山田 太郎" %}
+          </div>
 
+          <!-- 電話番号 / メールアドレス -->
+          <div class="col-md-6">
+            <label class="form-label">電話番号</label>
+            {% render_field form.phone_number class+="form-control" placeholder="09012345678" %}
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">メールアドレス</label>
+            {% render_field form.email_address class+="form-control" placeholder="example@company.jp" %}
+          </div>
+
+          <!-- 担当者（社内） -->
+          {% if form.assignee %}
+          <div class="col-md-6">
+            <label class="form-label">担当者（社内）</label>
+            {% render_field form.assignee class+="form-select" %}
+          </div>
+          {% endif %}
         </div>
-      </div>
+
+        <!-- ボタン行 -->
+        <div class="d-flex gap-2 mt-4">
+          <button type="submit" class="btn btn-success px-4">保存する</button>
+
+          {# 新規作成時は一覧へ、編集時は詳細へ戻す #}
+          {% if object %}
+            <a href="{% url 'reports:customer_detail' object.pk %}" class="btn btn-outline-secondary">キャンセル</a>
+          {% else %}
+            <a href="{% url 'reports:customer_list' %}" class="btn btn-outline-secondary">キャンセル</a>
+          {% endif %}
+        </div>
+      </form>
+
     </div>
   </div>
+
 </div>
 {% endblock %}

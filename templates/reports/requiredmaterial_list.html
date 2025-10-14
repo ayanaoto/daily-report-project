@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}必要物リスト一覧{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+  <h1 class="h4 mb-3">必要物リスト一覧</h1>
+
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table mb-0 align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>物品名</th>
+            <th>数量</th>
+            <th>状態</th>
+            <th>関連日報</th>
+            <th>追加日</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in materials %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>
+              {% if item.status == 'procured' %}
+                <span class="badge bg-success">{{ item.get_status_display }}</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">{{ item.get_status_display }}</span>
+              {% endif %}
+            </td>
+            <td><a href="{{ item.report.get_absolute_url }}">{{ item.report }}</a></td>
+            <td>{{ item.created_at|date:"Y/m/d" }}</td>
+            <td>
+              <a href="{% url 'reports:required_material_toggle_status' item.pk %}" class="btn btn-sm btn-outline-primary">状態切替</a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted">必要物はありません。</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}必要物 削除確認{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width: 600px;">
+  <div class="card shadow-sm">
+    <div class="card-body">
+      <h1 class="h5">削除確認</h1>
+      <p class="mb-3">必要物「{{ object.name }}」をリストから削除します。よろしいですか？</p>
+      <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger">はい、削除します</button>
+        <a class="btn btn-secondary" href="{% if object.report %}{{ object.report.get_absolute_url }}{% else %}{% url 'reports:required_material_list' %}{% endif %}">キャンセル</a>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

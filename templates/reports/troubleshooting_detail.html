@@ -1,35 +1,106 @@
-{% extends 'base.html' %}
-
-{% block title %}{{ object.title }}{% endblock %}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}トラブルシューティング詳細{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>{{ object.title }}</h1>
-    <div>
-        {% if object.author == request.user or request.user.is_superuser %}
-        <a href="{% url 'reports:troubleshooting_update' object.pk %}" class="btn btn-secondary">編集</a>
-        <a href="{% url 'reports:troubleshooting_delete' object.pk %}" class="btn btn-danger">削除</a>
-        {% endif %}
-    </div>
-</div>
+<div class="container my-4" style="max-width: 960px;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h4 mb-0">トラブルシューティング詳細</h1>
 
-<div class="card">
+    <div class="d-flex gap-2">
+      <button type="button" class="btn btn-outline-secondary" onclick="window.print()">
+        <i class="bi bi-printer"></i> 印刷 / PDF保存
+      </button>
+      <button type="button" id="copyAllBtn" class="btn btn-outline-primary">
+        <i class="bi bi-clipboard"></i> 全文をコピー
+      </button>
+      <a class="btn btn-primary" href="{% url 'reports:troubleshooting_update' object.pk %}">編集</a>
+      <a class="btn btn-outline-danger" href="{% url 'reports:troubleshooting_delete' object.pk %}">削除</a>
+      <a class="btn btn-light" href="{% url 'reports:troubleshooting_list' %}">一覧へ</a>
+    </div>
+  </div>
+
+  <div id="printArea" class="card">
     <div class="card-body">
-        <h5 class="card-title">場所・機器</h5>
-        <p class="card-text bg-light p-2 rounded">{{ object.location|linebreaksbr }}</p>
-        <hr>
-        <h5 class="card-title">症状・問題</h5>
-        <p class="card-text bg-light p-2 rounded">{{ object.symptom|linebreaksbr }}</p>
-        <hr>
-        <h5 class="card-title">対応・解決策</h5>
-        <p class="card-text bg-light p-2 rounded">{{ object.solution|linebreaksbr }}</p>
-        <hr>
-        <p class="card-text"><small class="text-muted"><strong>キーワード:</strong> {{ object.keywords|default:"未設定" }}</small></p>
-    </div>
-    <div class="card-footer text-muted">
-        報告者: {{ object.author.username|default:"不明" }} | 最終更新: {{ object.updated_at|date:"Y/m/d H:i" }}
-    </div>
-</div>
+      <dl class="row mb-0">
+        <dt class="col-sm-3">タイトル</dt>
+        <dd class="col-sm-9">{{ object.title }}</dd>
 
-<a href="{% url 'reports:troubleshooting_list' %}" class="btn btn-outline-secondary mt-3">一覧に戻る</a>
+        {% if object.created_at %}
+        <dt class="col-sm-3">作成日時</dt>
+        <dd class="col-sm-9">{{ object.created_at|date:"Y-m-d H:i" }}</dd>
+        {% endif %}
+
+        {% if object.author %}
+        <dt class="col-sm-3">作成者</dt>
+        <dd class="col-sm-9">{{ object.author.get_full_name|default:object.author.username }}</dd>
+        {% endif %}
+
+        {% if object.keywords %}
+        <dt class="col-sm-3">キーワード</dt>
+        <dd class="col-sm-9">{{ object.keywords }}</dd>
+        {% endif %}
+
+        {% if object.symptom %}
+        <dt class="col-sm-3">症状</dt>
+        <dd class="col-sm-9"><pre class="mb-0" style="white-space: pre-wrap;">{{ object.symptom }}</pre></dd>
+        {% endif %}
+
+        {% if object.cause %}
+        <dt class="col-sm-3">原因</dt>
+        <dd class="col-sm-9"><pre class="mb-0" style="white-space: pre-wrap;">{{ object.cause }}</pre></dd>
+        {% endif %}
+
+        {% if object.solution %}
+        <dt class="col-sm-3">対処</dt>
+        <dd class="col-sm-9"><pre id="tsSolution" class="mb-0" style="white-space: pre-wrap;">{{ object.solution }}</pre></dd>
+        {% endif %}
+      </dl>
+    </div>
+  </div>
+
+  <div class="text-muted small mt-2">
+    ※「印刷 / PDF保存」→ ブラウザの印刷で「PDFに保存」を選択してください。
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // 全文コピー
+  (function(){
+    const btn = document.getElementById('copyAllBtn');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+      const area = document.getElementById('printArea');
+      const text = area ? area.innerText : '';
+      try {
+        await navigator.clipboard.writeText(text);
+        btn.classList.remove('btn-outline-primary');
+        btn.classList.add('btn-success');
+        btn.innerHTML = '<i class="bi bi-clipboard-check"></i> コピーしました';
+        setTimeout(() => {
+          btn.classList.remove('btn-success');
+          btn.classList.add('btn-outline-primary');
+          btn.innerHTML = '<i class="bi bi-clipboard"></i> 全文をコピー';
+        }, 1500);
+      } catch (e) {
+        alert('コピーに失敗しました: ' + e);
+      }
+    });
+  })();
+</script>
+{% endblock %}
+
+{% block extra_styles %}
+<style>
+  @media print {
+    .navbar, .btn, .dropdown, .alert, .breadcrumb { display: none !important; }
+    .container { max-width: 100% !important; }
+    .card, .card-body { border: none !important; box-shadow: none !important; }
+    a[href]:after { content: ""; }
+    pre { white-space: pre-wrap; }
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  }
+</style>
 {% endblock %}
